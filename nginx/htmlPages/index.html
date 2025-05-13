@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Inicio - Plataforma de Streaming</title>
+  <style>
+    /* Estilos básicos de la página de inicio */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      text-align: center;
+      padding: 2rem;
+    }
+    .boton {
+      display: inline-block;
+      margin: 1rem;
+      padding: 0.8rem 1.2rem;
+      background-color: #007BFF;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    .boton:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!-- 
+    Página principal (inicio). Muestra si hay un usuario "logueado" (falso).
+    Usa localStorage para guardar "username" y "themeColor".
+  -->
+  <header>
+    <h1>Plataforma de Streaming - Inicio</h1>
+    <nav>
+      <!-- Enlaces a otras secciones -->
+      <a href="index.html">Inicio</a>
+      <a href="games.html">Juegos</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Bienvenido a la Plataforma de S</h2>
+    <p id="userInfo"></p>
+    <!-- Botones de atajo -->
+    <a class="boton" href="games.html">Ver Juegos Disponibles</a>
+    <a class="boton" href="startStream.html">Iniciar un Stream</a>
+    <a class="boton" id="streamLink">Ver Stream en Vivo</a>
+    <br>
+    <!-- Botón de Login / Logout dinámico -->
+    <a class="boton" href="login.html" id="loginBtn">Login</a>
+  </main>
+
+  <script>
+    
+    // Detecta el dominio actual y cambia el enlace al stream
+    const streamLink = document.getElementById('streamLink');
+
+    if (window.location.hostname.includes('cetys')) {
+      streamLink.href = 'http://servidor-stream.cetys.local';
+    } else {
+      streamLink.href = 'http://servidor-stream.casa.local';
+    }
+    
+    // Al cargar, verificamos si hay un "username" en localStorage
+    const user = localStorage.getItem('username');
+    const userInfo = document.getElementById('userInfo');
+    const loginBtn = document.getElementById('loginBtn');
+
+    if (user) {
+      // Si hay usuario guardado, mostramos su nombre
+      userInfo.textContent = `Has iniciado sesión como: ${user}`;
+      // Cambiamos el texto del botón a "Cerrar Sesión"
+      loginBtn.textContent = 'Cerrar Sesión';
+      // Cancelamos el enlace a login y escuchamos el click
+      loginBtn.href = '#';
+      loginBtn.addEventListener('click', () => {
+        // Borramos el usuario de localStorage
+        localStorage.removeItem('username');
+        // Recargamos la página
+        window.location.reload();
+      });
+    } else {
+      userInfo.textContent = 'No has iniciado sesión.';
+      loginBtn.textContent = 'Login';
+      loginBtn.href = 'login.html';
+    }
+
+    // También aplicamos el color de tema guardado, si existe
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>

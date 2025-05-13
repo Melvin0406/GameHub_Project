@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Perfil de Usuario</title>
+  <style>
+    /*
+      Muestra información falsa de cada usuario 
+      y enlaces para mandar mensaje privado o correo.
+    */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      text-align: center;
+      padding: 2rem;
+    }
+    .profile-box {
+      background-color: #fff;
+      display: inline-block;
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: left;
+    }
+    .boton {
+      display: inline-block;
+      margin: 1rem 1rem 0 0;
+      padding: 0.8rem 1.2rem;
+      background-color: #007BFF;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    .boton:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    Recibe ?user=Usuario
+    Muestra info "falsa" de ese usuario.
+    Luego ofrece enlaces para:
+      - Mandar mensaje privado (messages.html?user=xxxx)
+      - Mandar correo (email.html?to=xxxx)
+  -->
+  <header>
+    <h1>Perfil de Usuario</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="games.html">Juegos</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="profile-box">
+      <h2 id="userName"></h2>
+      <p id="userDescription"></p>
+      <a class="boton" id="privateMsgLink" href="#">Enviar Mensaje Privado</a>
+      <a class="boton" id="emailLink" href="#">Enviar Correo</a>
+    </div>
+  </main>
+
+  <script>
+    // Datos falsos para cada usuario
+    // NOTA: Podrías guardar esto en un "falso backend" o JSON. 
+    const fakeUsers = {
+      "Rafael": {
+        description: "Aficionado a Zelda, Smash Bros y Mario Kart. '¡Los juegos de Nintendo me encantan!'"
+      },
+      "Kevin": {
+        description: "Apasionado de la programación. Tips de Smash Bros y desarrollo web."
+      },
+      "Guillermo": {
+        description: "Fan de Dragon Ball y consejos de matemáticas. También juega Smash Bros."
+      },
+      "Alice": {
+        description: "Mensaje automático 1 (usuario genérico)."
+      },
+      "Bob": {
+        description: "Mensaje automático 2 (usuario genérico)."
+      },
+      "Carlos": {
+        description: "Usuario ficticio. Crea streaming de prueba."
+      },
+      "Diana": {
+        description: "Usuario ficticio. Comparte mensajes en vivo."
+      }
+    };
+
+    // Obtenemos el "user" de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const userParam = urlParams.get('user');
+
+    const userNameEl = document.getElementById('userName');
+    const userDescEl = document.getElementById('userDescription');
+    const privateMsgLink = document.getElementById('privateMsgLink');
+    const emailLink = document.getElementById('emailLink');
+
+    if (userParam && fakeUsers[userParam]) {
+      userNameEl.textContent = userParam;
+      userDescEl.textContent = fakeUsers[userParam].description;
+    } else {
+      userNameEl.textContent = "Usuario Desconocido";
+      userDescEl.textContent = "No existe información para este usuario.";
+    }
+
+    // Creamos los enlaces para mandar mensaje y correo (falsos)
+    privateMsgLink.href = `messages.html?user=${encodeURIComponent(userParam)}`;
+    emailLink.href = `email.html?to=${encodeURIComponent(userParam)}`;
+
+    // Aplicar color de tema
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>

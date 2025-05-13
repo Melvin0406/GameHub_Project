@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mensajes Privados</title>
+  <style>
+    /*
+      Muestra un chat privado con usuarios falsos.
+      Si se pasa ?user=Rafael (por ejemplo), abre la "conversación" con Rafael.
+      Los usuarios (Rafael, Kevin, Guillermo, etc.) responden con mensajes automáticos.
+    */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      display: flex;
+      padding: 2rem;
+      gap: 2rem;
+    }
+    .user-list, .chat-area {
+      background-color: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      flex: 1;
+    }
+    .user-list h3, .chat-area h3 {
+      margin-top: 0;
+    }
+    .messages {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+    .messages p {
+      margin: 0.5rem 0;
+    }
+    .chat-input {
+      display: flex;
+      gap: 0.5rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.5rem;
+    }
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    Muestra una lista de usuarios falsos (incluyendo Rafael, Kevin, Guillermo).
+    Al hacer clic en uno, muestra el "chat" con ese usuario. 
+    Se pueden mandar mensajes y ver respuestas automáticas.
+  -->
+  <header>
+    <h1>Mensajes Privados (Falso)</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="games.html">Juegos</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="user-list">
+      <h3>Usuarios Disponibles</h3>
+      <!-- Aquí listamos más usuarios -->
+      <ul id="userList"></ul>
+    </div>
+    <div class="chat-area">
+      <h3 id="chatTitle">Selecciona un usuario</h3>
+      <div class="messages" id="messages"></div>
+      <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Escribe un mensaje...">
+        <button id="sendBtn">Enviar</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Lista de usuarios falsos
+    const fakeUsers = [
+      'Rafael',
+      'Kevin',
+      'Guillermo',
+      'Alice',
+      'Bob',
+      'Carlos',
+      'Diana'
+    ];
+
+    // Respuestas automáticas según el usuario
+    // Podrías hacer algo más elaborado, aquí es un ejemplo básico
+    const autoResponses = {
+      'Rafael': [
+        "¡Hola! Soy fan de Zelda.", 
+        "Smash Bros es mi favorito.", 
+        "Mario Kart está genial."
+      ],
+      'Kevin': [
+        "Hola, me gusta programar en JavaScript.", 
+        "Tip: Usa funciones puras y cuida la complejidad.", 
+        "Smash Bros: ¡Practica tus combos!"
+      ],
+      'Guillermo': [
+        "Para matemáticas, resolver ejercicios es clave.", 
+        "Dragon Ball es mi serie favorita.", 
+        "Smash Bros y Dragon Ball, ¡gran combinación!"
+      ],
+      'Alice': [
+        "Mensaje automático 1",
+        "Mensaje automático 1 repetido"
+      ],
+      'Bob': [
+        "Mensaje automático 2"
+      ],
+      'Carlos': [
+        "Hola, soy un usuario de prueba."
+      ],
+      'Diana': [
+        "Hola, soy otra usuaria de prueba."
+      ]
+    };
+
+    const userList = document.getElementById('userList');
+    const chatTitle = document.getElementById('chatTitle');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let currentUser = null; // A quién le estamos escribiendo
+
+    // Llenamos la lista de usuarios en la columna izquierda
+    fakeUsers.forEach(u => {
+      const li = document.createElement('li');
+      li.textContent = u;
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', () => {
+        openChatWith(u);
+      });
+      userList.appendChild(li);
+    });
+
+    // Si la URL trae ?user=Rafael, por ejemplo, abrimos ese chat
+    const urlParams = new URLSearchParams(window.location.search);
+    const userParam = urlParams.get('user');
+    if (userParam && fakeUsers.includes(userParam)) {
+      openChatWith(userParam);
+    }
+
+    // Función que abre el chat con un usuario
+    function openChatWith(u) {
+      currentUser = u;
+      chatTitle.textContent = `Chat con ${u}`;
+      messagesDiv.innerHTML = '';
+    }
+
+    // Cuando enviamos un mensaje
+    sendBtn.addEventListener('click', () => {
+      if (!currentUser) {
+        alert('Selecciona un usuario primero');
+        return;
+      }
+      const msg = messageInput.value.trim();
+      if (!msg) return;
+
+      // Tomamos nuestro nombre (si hay uno logueado) o "Tú"
+      const myUser = localStorage.getItem('username') || 'Tú';
+      
+      // Mostramos el mensaje en el div
+      addMessage(myUser, msg);
+      messageInput.value = '';
+
+      // Simulamos la respuesta automática del usuario
+      setTimeout(() => {
+        const responses = autoResponses[currentUser];
+        if (responses && responses.length > 0) {
+          // Escogemos una respuesta al azar
+          const randomIndex = Math.floor(Math.random() * responses.length);
+          addMessage(currentUser, responses[randomIndex]);
+        } else {
+          // Si no hay respuestas definidas, un fallback
+          addMessage(currentUser, "Mensaje automático por defecto");
+        }
+      }, 1000);
+    });
+
+    function addMessage(who, text) {
+      const p = document.createElement('p');
+      p.textContent = `${who}: ${text}`;
+      messagesDiv.appendChild(p);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Aplica el color de tema (si hay)
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>

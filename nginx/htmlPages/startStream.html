@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Iniciar Stream</title>
+  <style>
+    /*
+      Permite "iniciar" un stream (falso).
+      En un sistema real, enviarías estos datos al servidor y se generaría un ID de stream. 
+    */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #resultMessage {
+      margin-top: 1rem;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    Permite elegir un nombre para el stream y un juego.
+    No crea nada real, solo muestra un mensaje de confirmación.
+  -->
+  <header>
+    <h1>Iniciar un Nuevo Stream</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="games.html">Juegos</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <form id="streamForm">
+      <label for="streamName">Nombre del Stream:</label>
+      <input type="text" id="streamName" required>
+
+      <label for="gameSelect">Seleccionar Juego:</label>
+      <select id="gameSelect" required>
+        <option value="">(Elige un juego)</option>
+        <option value="1">Juego 1</option>
+        <option value="2">Juego 2</option>
+        <option value="3">Juego 3</option>
+      </select>
+
+      <button type="submit">Iniciar Stream (falso)</button>
+    </form>
+    <p id="resultMessage"></p>
+  </main>
+
+  <script>
+    const streamForm = document.getElementById('streamForm');
+    const resultMessage = document.getElementById('resultMessage');
+
+    streamForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const streamName = document.getElementById('streamName').value.trim();
+      const gameSelected = document.getElementById('gameSelect').value;
+
+      if (!streamName || !gameSelected) return;
+
+      // Simulamos "crear stream"
+      // En un proyecto real, aquí harías una petición POST al servidor
+      resultMessage.textContent = `Has iniciado el stream "${streamName}" para el juego ${gameSelected}. (Falso)`;
+      resultMessage.style.color = "green";
+    });
+
+    // Aplica el color de tema si existe
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>

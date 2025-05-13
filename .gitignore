@@ -1,0 +1,27 @@
+# Backend specific
+backend/node_modules/
+backend/.env
+backend/gamehub.sqlite
+backend/gamehub.sqlite-journal # Archivos temporales de SQLite
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+# Si tienes una carpeta de logs en el backend
+backend/logs/
+
+# Nginx Portable - Archivos generados y sensibles
+nginx/logs/
+nginx/temp/
+nginx/html/hls_stream_data/
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+*.swp
+
+# Archivos de IDEs
+.vscode/
+.idea/
+
+# Otros archivos temporales o de caché
+*.cache

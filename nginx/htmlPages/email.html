@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Enviar Correo</title>
+  <style>
+    /*
+      Página para enviar correos falsos (no se envía nada real).
+      Si viene ?to=Rafael, autocompleta el destinatario.
+      Podrías integrar un backend real para mandar correos con NodeMailer o similar.
+    */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    form {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    form h2 {
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem;
+      font-weight: bold;
+    }
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    textarea {
+      min-height: 100px;
+    }
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      background-color: #007BFF;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- 
+    Formulario de "correo" falso. 
+    Al darle Enviar, no hace nada real, solo muestra un alert.
+    Si la URL dice ?to=Rafael, el campo destinatario se autocompleta. 
+  -->
+  <header>
+    <h1>Enviar Correo (Falso)</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="games.html">Juegos</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <form id="emailForm">
+      <h2>Redactar Correo</h2>
+      <label for="destinatario">Destinatario (puede ser alguien de la red o externo):</label>
+      <input type="text" id="destinatario" placeholder="ejemplo@correo.com" required>
+      
+      <label for="asunto">Asunto:</label>
+      <input type="text" id="asunto" placeholder="Asunto del mensaje" required>
+
+      <label for="mensaje">Mensaje:</label>
+      <textarea id="mensaje" placeholder="Escribe tu mensaje aquí..." required></textarea>
+
+      <button type="submit">Enviar</button>
+    </form>
+  </main>
+
+  <footer>
+    <p>© 2025 Mi Plataforma de Streaming</p>
+  </footer>
+
+  <script>
+    // Autocompletar destinatario si hay ?to= en la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const toParam = urlParams.get('to');
+    const destinatarioInput = document.getElementById('destinatario');
+    if (toParam) {
+      destinatarioInput.value = toParam;
+    }
+
+    // Al "enviar", simplemente mostramos un alert (falso)
+    const emailForm = document.getElementById('emailForm');
+    emailForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert("Correo enviado (falso). Gracias.");
+      // Podrías redirigir a otra página o resetear
+      emailForm.reset();
+    });
+
+    // Aplica el color de tema, si existe
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>
