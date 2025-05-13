@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Plataforma de Streaming</title>
+  <style>
+    /* Página de login básico (falso) usando localStorage */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    form {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!-- 
+    Simula un login. Al enviar el formulario, guardamos el 'username' en localStorage. 
+    No hay validación real de password, ya que es solo un demo en front. 
+  -->
+  <header>
+    <h1>Plataforma de Streaming - Login</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="games.html">Juegos</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <form id="loginForm">
+      <h2>Iniciar Sesión (Falso)</h2>
+      <label for="usuario">Usuario:</label>
+      <input type="text" id="usuario" required>
+
+      <label for="password">Contraseña:</label>
+      <input type="password" id="password" required>
+
+      <button type="submit">Ingresar</button>
+    </form>
+  </main>
+
+  <script>
+    // Al hacer submit, guardamos el nombre en localStorage
+    const loginForm = document.getElementById('loginForm');
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const usuario = document.getElementById('usuario').value;
+      // Guardamos en localStorage el nombre
+      localStorage.setItem('username', usuario);
+      // Redirigimos al index (o a donde quieras)
+      window.location.href = 'index.html';
+    });
+
+    // Aplicar color de tema, si existe
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>

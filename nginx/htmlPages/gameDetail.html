@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalle del Juego</title>
+  <style>
+    /* Muestra imagen, descripción y streams activos (falsos) para cada juego */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      padding: 2rem;
+    }
+    .game-image {
+      max-width: 300px;
+      border: 2px solid #333;
+      border-radius: 8px;
+    }
+    .streams-list a {
+      display: block;
+      margin: 1rem 0;
+      text-decoration: none;
+      color: #007BFF;
+    }
+  </style>
+</head>
+<body>
+  <!-- 
+    Lee el "id" del juego desde ?id= en la URL.
+    Muestra su nombre, descripción, imagen y la lista de streams falsos.
+  -->
+  <header>
+    <h1 id="gameTitle">Detalle del Juego</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="login.html">Login</a>
+      <a href="games.html">Juegos</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <div>
+      <img id="gameImg" class="game-image" src="" alt="Imagen del Juego">
+      <p id="gameDesc"></p>
+    </div>
+    <hr>
+    <h2>Streams activos</h2>
+    <div class="streams-list" id="streamsList">
+      <!-- Se llena dinámicamente con JS -->
+    </div>
+  </main>
+
+  <script>
+    // Datos falsos de juegos
+    const juegos = {
+      1: {
+        nombre: "Juego 1",
+        descripcion: "Esta es la descripción del Juego 1",
+        imagen: "https://via.placeholder.com/300?text=Juego+1"
+      },
+      2: {
+        nombre: "Juego 2",
+        descripcion: "Esta es la descripción del Juego 2",
+        imagen: "https://via.placeholder.com/300?text=Juego+2"
+      },
+      3: {
+        nombre: "Juego 3",
+        descripcion: "Esta es la descripción del Juego 3",
+        imagen: "https://via.placeholder.com/300?text=Juego+3"
+      }
+    };
+
+    // Streams falsos
+    // Para cada juego, creamos entradas con ID y datos
+    const streamsFalsos = {
+      1: [
+        { id: "s1", nombre: "Stream 1 de Juego 1", canal: "CanalX" },
+        { id: "s2", nombre: "Stream 2 de Juego 1", canal: "CanalY" },
+        { id: "s3", nombre: "Stream 3 de Juego 1", canal: "CanalZ" }
+      ],
+      2: [
+        { id: "s1", nombre: "Stream 1 de Juego 2", canal: "CanalA" },
+        { id: "s2", nombre: "Stream 2 de Juego 2", canal: "CanalB" }
+      ],
+      3: [
+        { id: "s1", nombre: "Stream 1 de Juego 3", canal: "CanalC" }
+      ]
+    };
+
+    // Tomamos el parametro ?id= para saber qué juego mostrar
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('id');
+
+    const gameTitle = document.getElementById('gameTitle');
+    const gameImg = document.getElementById('gameImg');
+    const gameDesc = document.getElementById('gameDesc');
+    const streamsList = document.getElementById('streamsList');
+
+    if (gameId && juegos[gameId]) {
+      const juego = juegos[gameId];
+      gameTitle.textContent = juego.nombre;
+      gameDesc.textContent = juego.descripcion;
+      gameImg.src = juego.imagen;
+
+      // Mostramos streams falsos
+      const streams = streamsFalsos[gameId] || [];
+      streams.forEach(stream => {
+        const a = document.createElement('a');
+        // Enlazamos a la página de streamView.html con parámetros
+        a.href = `streamView.html?game=${gameId}&stream=${stream.id}`;
+        a.textContent = `${stream.nombre} - Canal: ${stream.canal}`;
+        streamsList.appendChild(a);
+      });
+    } else {
+      gameTitle.textContent = "Juego no encontrado";
+      gameDesc.textContent = "";
+      gameImg.style.display = 'none';
+    }
+
+    // Aplicar color de tema si se eligió
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>

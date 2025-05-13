@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juegos - Plataforma de Streaming</title>
+  <style>
+    /* Página con tarjetas de juegos (falso) */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    main {
+      padding: 2rem;
+    }
+    .game-list {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .game-card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      width: 180px;
+      text-align: center;
+      margin: 1rem;
+      padding: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      color: #333;
+    }
+    .game-card:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 
+    Muestra una lista de juegos (falsos).
+    Al hacer clic en uno, vas a gameDetail.html?id=1 (por ejemplo).
+  -->
+  <header>
+    <h1>Lista de Juegos</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="login.html">Login</a>
+      <a href="startStream.html">Iniciar Stream</a>
+      <a href="messages.html">Mensajes Privados</a>
+      <a href="email.html">Enviar Correo</a>
+      <a href="config.html">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Elige un Juego</h2>
+    <div class="game-list">
+      <a class="game-card" href="gameDetail.html?id=1">
+        <p>Juego 1</p>
+      </a>
+      <a class="game-card" href="gameDetail.html?id=2">
+        <p>Juego 2</p>
+      </a>
+      <a class="game-card" href="gameDetail.html?id=3">
+        <p>Juego 3</p>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    // Si tenemos color guardado en localStorage, lo aplicamos
+    const storedColor = localStorage.getItem('themeColor');
+    if (storedColor) {
+      document.body.style.backgroundColor = storedColor;
+    }
+  </script>
+</body>
+</html>
