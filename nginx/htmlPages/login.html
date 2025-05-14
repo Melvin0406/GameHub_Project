@@ -1,117 +1,87 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Login - Plataforma de Streaming</title>
-  <style>
-    /* Página de login básico (falso) usando localStorage */
-    body {
-      margin: 0; 
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 1rem;
-      text-decoration: none;
-    }
-    main {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    form {
-      background-color: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
-    }
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 0.8rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #007BFF;
-      color: #fff;
-      border: none;
-      padding: 0.8rem 1.5rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GameHub Local</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f0f0; margin: 0; }
+        .container { background-color: white; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { text-align: center; color: #333; }
+        label { display: block; margin-bottom: 0.5rem; color: #555; }
+        input[type="email"], input[type="password"] { width: calc(100% - 22px); padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 0.75rem; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        button:hover { background-color: #0056b3; }
+        .message { text-align: center; margin-top: 1rem; padding: 0.5rem; border-radius: 4px; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        p { text-align: center; }
+        a { color: #007BFF; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
-  <!-- 
-    Simula un login. Al enviar el formulario, guardamos el 'username' en localStorage. 
-    No hay validación real de password, ya que es solo un demo en front. 
-  -->
-  <header>
-    <h1>Plataforma de Streaming - Login</h1>
-    <nav>
-      <a href="index.html">Inicio</a>
-      <a href="games.html">Juegos</a>
-      <a href="startStream.html">Iniciar Stream</a>
-      <a href="messages.html">Mensajes Privados</a>
-      <a href="email.html">Enviar Correo</a>
-      <a href="config.html">Configuración</a>
-    </nav>
-  </header>
+    <div class="container">
+        <h1>Iniciar Sesión</h1>
+        <form id="loginForm">
+            <div>
+                <label for="email">Correo Electrónico:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div id="messageArea" class="message" style="display:none;"></div>
+        <p>¿No tienes una cuenta? <a href="signup.html">Regístrate aquí</a></p>
+    </div>
 
-  <main>
-    <form id="loginForm">
-      <h2>Iniciar Sesión (Falso)</h2>
-      <label for="usuario">Usuario:</label>
-      <input type="text" id="usuario" required>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const messageArea = document.getElementById('messageArea');
 
-      <label for="password">Contraseña:</label>
-      <input type="password" id="password" required>
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Evita el envío tradicional del formulario
 
-      <button type="submit">Ingresar</button>
-    </form>
-  </main>
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-  <script>
-    // Al hacer submit, guardamos el nombre en localStorage
-    const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const usuario = document.getElementById('usuario').value;
-      // Guardamos en localStorage el nombre
-      localStorage.setItem('username', usuario);
-      // Redirigimos al index (o a donde quieras)
-      window.location.href = 'index.html';
-    });
+            messageArea.style.display = 'none';
+            messageArea.className = 'message';
 
-    // Aplicar color de tema, si existe
-    const storedColor = localStorage.getItem('themeColor');
-    if (storedColor) {
-      document.body.style.backgroundColor = storedColor;
-    }
-  </script>
+            try {
+                // Nginx redirigirá /api/auth/login a tu backend Node.js
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Guardar el token JWT en localStorage
+                    localStorage.setItem('authToken', data.token);
+                    // Opcional: guardar información del usuario si la necesitas directamente
+                    // localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    
+                    // Redirigir a la página principal o al dashboard
+                    window.location.href = 'index.html'; // O la página que prefieras
+                } else {
+                    messageArea.textContent = data.message || 'Error al iniciar sesión. Verifica tus credenciales.';
+                    messageArea.classList.add('error');
+                    messageArea.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error en el proceso de login:', error);
+                messageArea.textContent = 'Ocurrió un error de red. Por favor, intenta más tarde.';
+                messageArea.classList.add('error');
+                messageArea.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
