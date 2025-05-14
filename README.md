@@ -34,7 +34,7 @@ Este proyecto simula una plataforma tipo Twitch/red social enfocada en videojueg
 * **Backend:** Node.js, Express.js
 * **Base de Datos:** SQLite
 * **Servidor Web/Proxy/Streaming:** Nginx (versión portátil para Windows incluida en el repo)
-* **DNS Local:** Acrylic DNS Proxy (recomendado) o archivo hosts.
+* **DNS Local:** Acrylic DNS Proxy.
 
 ---
 
@@ -44,7 +44,7 @@ Antes de comenzar, asegúrate de tener instalado lo siguiente en tu máquina Win
 * **Git:** Para clonar y gestionar el control de versiones. [Descargar Git](https://git-scm.com/downloads)
 * **Node.js:** Versión LTS (Long Term Support) recomendada. Esto también instala `npm`. [Descargar Node.js](https://nodejs.org/)
 * **(Opcional pero recomendado)** Un editor de código como [VS Code](https://code.visualstudio.com/).
-* **(Opcional)** Herramienta para probar APIs como [Postman](https://www.postman.com/downloads/) o [Insomnia](https://insomnia.rest/download).
+* **(Opcional)** Herramienta para probar APIs como [Postman](https://www.postman.com/downloads/).
 * **(Para streaming)** [OBS Studio](https://obsproject.com/download)
 
 ---
@@ -58,6 +58,7 @@ Abre una terminal (Git Bash, CMD o PowerShell) y clona el repositorio:
 ```bash
 git clone [URL_DEL_REPOSITORIO_GIT_AQUI] GameHub_Project
 cd GameHub_Project
+```
 (Reemplaza `[URL_DEL_REPOSITORIO_GIT_AQUI]` con la URL real del repositorio en GitHub).
 
 ### 2. Configurar DNS Local
