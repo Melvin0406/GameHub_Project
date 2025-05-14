@@ -54,36 +54,38 @@ Antes de comenzar, asegúrate de tener instalado lo siguiente en tu máquina Win
 Sigue estos pasos para configurar el proyecto en tu máquina local:
 
 ### 1. Clonar el Repositorio
-Abre una terminal (Git Bash, CMD o PowerShell) y clona el repositorio:
+Si tienes GitHub Desktop descargado, en esta página del repositorio, ve al botón verde de Code y abre o clona el repositorio con GitHub Desktop.
+
+Si prefieres hacerlo manual, abre una terminal (Git Bash, CMD o PowerShell), dirígete al folder donde quieres tener el repositorio y clona el repositorio:
 ```bash
+cd C:Usuario\Documents\Github (Por ejemplo)
 git clone [URL_DEL_REPOSITORIO_GIT_AQUI] GameHub_Project
 cd GameHub_Project
 ```
-(Reemplaza `[URL_DEL_REPOSITORIO_GIT_AQUI]` con la URL real del repositorio en GitHub).
+(Reemplaza `[URL_DEL_REPOSITORIO_GIT_AQUI]` con la URL real del repositorio en GitHub en el botón verde de code).
 
 ### 2. Configurar DNS Local
 Para acceder a la plataforma usando los nombres de dominio `servidor-juego.casa.local` y `servidor-stream.casa.local`, necesitas configurar tu DNS local.
 
-**Opción A: Acrylic DNS Proxy (Recomendado)**
+**Acrylic DNS Proxy**
 1.  Descarga e instala Acrylic DNS Proxy desde [su sitio oficial](http://mayakron.altervista.org/wikibase/show.php?id=AcrylicHome).
-2.  Edita el archivo de hosts de Acrylic (ej. `C:\Program Files (x86)\Acrylic DNS Proxy\AcrylicHosts.txt`).
-3.  Añade las siguientes líneas:
-    ```
-    127.0.0.1 servidor-juego.casa.local
-    127.0.0.1 servidor-stream.casa.local
-    ```
-4.  Guarda el archivo y reinicia el servicio "Acrylic DNS Proxy Service" desde `services.msc` o reinicia tu PC.
-5.  Configura las propiedades de tu adaptador de red (IPv4) para usar `127.0.0.1` como el "Servidor DNS preferido". (Si tu Acrylic corre en otra IP, usa esa).
-
-**Opción B: Archivo Hosts de Windows**
-1.  Abre el Bloc de notas (o tu editor preferido) **como Administrador**.
-2.  Abre el archivo: `C:\Windows\System32\drivers\etc\hosts`
+2.  Edita el archivo de hosts de Acrylic abriendolo como administrador en notepad (ej. `C:\Program Files (x86)\Acrylic DNS Proxy\AcrylicHosts.txt`).
 3.  Añade las siguientes líneas al final del archivo:
     ```
-    127.0.0.1 servidor-juego.casa.local
-    127.0.0.1 servidor-stream.casa.local
+    [LA_IP_DE_TU_LAPTOP] servidor-juego.casa.local
+    [LA_IP_DE_TU_LAPTOP] servidor-stream.casa.local
     ```
-4.  Guarda el archivo. Puede que necesites ejecutar `ipconfig /flushdns` en una terminal (como administrador).
+4.  Edita el archivo AcrylicConfiguration.ini abriéndolo como administrador en notepad (ej. `C:\Program Files (x86)\Acrylic DNS Proxy\AcrylicConfiguration.ini`).
+5.  Añade la siguiente línea al final del archivo en la parte de [AllowedAddressesSection]:
+    ```
+    IP1=*
+    ```
+5.  Guarda ambos archivos y reinicia el servicio "Acrylic DNS Proxy Service" abriendo el cmd y escribiendo los siguientes comandos:
+```bash
+net stop AcrylicDNSProxySvc
+net start AcrylicDNSProxySvc
+```
+6.  Configura las propiedades de tu adaptador de red (IPv4) para usar `127.0.0.1` como el "Servidor DNS preferido".
 
 ### 3. Configurar el Backend
 El backend maneja la lógica de la aplicación y la autenticación.
@@ -95,13 +97,7 @@ El backend maneja la lógica de la aplicación y la autenticación.
     (Si estás en la raíz del proyecto `GameHub_Project`, entonces `cd backend`).
 
 2.  **Crear archivo de entorno `.env`:**
-    Copia el archivo `backend/.env.example` (si existe en el repositorio) a un nuevo archivo llamado `backend/.env`. Si `.env.example` no existe, crea `backend/.env` manualmente con el siguiente contenido:
-    ```env
-    # backend/.env
-    JWT_SECRET="REEMPLAZA_ESTO_CON_UNA_CADENA_SECRETA_MUY_LARGA_Y_ALEATORIA"
-    DATABASE_PATH=./gamehub_local_db.sqlite # Ruta relativa a la carpeta 'backend'
-    PORT=3000 # Puerto donde correrá el backend
-    ```
+    Copia el archivo `backend/.env.example` a un nuevo archivo llamado `backend/.env`.
     **¡Importante!** Cambia `JWT_SECRET` por una cadena única, larga y segura.
 
 3.  **Instalar dependencias del backend:**
@@ -110,6 +106,7 @@ El backend maneja la lógica de la aplicación y la autenticación.
     ```
 
 ### 4. Configurar Nginx Portátil
+NORMALMENTE NO DEBERÍAS DE NECESITAR MODIFICAR NADA EN ESTA SECCIÓN, pero la pongo por si hay algún problema en el futuro.
 Nginx se incluye de forma portátil dentro de la carpeta `nginx/` del proyecto.
 
 1.  **Verificar Puertos:** Asegúrate de que ningún otro servicio (como IIS, Skype, u otra instancia de Apache/Nginx) esté usando el **puerto 80**. Si es así, detén ese servicio temporalmente o modifica el archivo `nginx/conf/nginx.conf` para que escuche en un puerto diferente (ej. `listen 8080;`) y ajusta las URLs de acceso en el navegador.
@@ -134,8 +131,10 @@ Debes iniciar tanto el backend como Nginx.
     * Ejecuta el script de inicio:
         ```batch
         start_nginx.bat
+        nginx
         ```
     * Esto debería iniciar Nginx. Puedes verificar los logs en `nginx/logs/error.log` si algo sale mal.
+    * Puedes cerrar esta terminal.
 
 ---
 
@@ -156,7 +155,7 @@ Si quieres probar la funcionalidad de streaming y transmitir desde tu PC:
 4.  Selecciona la pestaña `Emisión` (o `Stream`).
 5.  Configura lo siguiente:
     * **Servicio:** `Personalizado...` (o `Custom...`)
-    * **Servidor:** `rtmp://servidor-stream.casa.local/hls` (Esta es la aplicación RTMP que definiste en `nginx.conf` para HLS. Si tienes otra aplicación RTMP como `live`, usa `rtmp://servidor-stream.casa.local/live`).
+    * **Servidor:** `rtmp://servidor-stream.casa.local/hls`
     * **Clave de retransmisión:** `test` (o cualquier clave que desees. Esta clave se usará en la URL HLS, ej. `http://servidor-stream.casa.local/hls/test.m3u8` si `hls_path` en Nginx está configurado como `html/hls_stream_data` y la clave es `test`, entonces el archivo será `html/hls_stream_data/test.m3u8`).
 6.  Configura tus fuentes de video/audio en OBS (ej. capturar pantalla o juego).
 7.  Haz clic en "Iniciar transmisión" en OBS.
