@@ -71,44 +71,60 @@
   </main>
 
   <script>
-    
     // Detecta el dominio actual y cambia el enlace al stream
     const streamLink = document.getElementById('streamLink');
-
     if (window.location.hostname.includes('cetys')) {
-      streamLink.href = 'http://servidor-stream.cetys.local';
+        streamLink.href = 'http://servidor-stream.cetys.local';
     } else {
-      streamLink.href = 'http://servidor-stream.casa.local';
+        streamLink.href = 'http://servidor-stream.casa.local';
     }
     
-    // Al cargar, verificamos si hay un "username" en localStorage
-    const user = localStorage.getItem('username');
-    const userInfo = document.getElementById('userInfo');
-    const loginBtn = document.getElementById('loginBtn');
+    // --- Lógica de Autenticación Actualizada ---
+    const authToken = localStorage.getItem('authToken');
+    const userInfo = document.getElementById('userInfo'); // Asumo que tienes un <p id="userInfo"></p> o similar
+    const loginBtn = document.getElementById('loginBtn'); // Asumo que tienes <a id="loginBtn">Login</a>
+    // Podrías querer un botón de Configuración o Perfil que solo aparezca si está logueado
+    // const configBtn = document.getElementById('configBtn'); // Si tienes <a id="configBtn">Configuración</a>
 
-    if (user) {
-      // Si hay usuario guardado, mostramos su nombre
-      userInfo.textContent = `Has iniciado sesión como: ${user}`;
-      // Cambiamos el texto del botón a "Cerrar Sesión"
-      loginBtn.textContent = 'Cerrar Sesión';
-      // Cancelamos el enlace a login y escuchamos el click
-      loginBtn.href = '#';
-      loginBtn.addEventListener('click', () => {
-        // Borramos el usuario de localStorage
-        localStorage.removeItem('username');
-        // Recargamos la página
-        window.location.reload();
-      });
-    } else {
-      userInfo.textContent = 'No has iniciado sesión.';
-      loginBtn.textContent = 'Login';
-      loginBtn.href = 'login.html';
+    function updateNavBasedOnAuth() {
+        if (authToken) {
+            // Para obtener el nombre de usuario, podrías decodificar el token (requiere una librería como jwt-decode en el frontend)
+            // o, mejor aún, tener un endpoint en el backend /api/auth/me que devuelva los datos del usuario.
+            // Por ahora, un mensaje genérico:
+            // O si guardaste el usuario en login: const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            // if (currentUser) {
+            //    userInfo.textContent = `Bienvenido, ${currentUser.username}!`;
+            // } else {
+            userInfo.textContent = '¡Bienvenido! Sesión iniciada.'; // Mensaje simple
+            // }
+            
+            loginBtn.textContent = 'Cerrar Sesión';
+            loginBtn.href = '#logout'; // Evita ir a login.html directamente
+
+            loginBtn.onclick = () => { // Usamos onclick para poder removerlo si es necesario o simplemente sobreescribir
+                localStorage.removeItem('authToken');
+                // localStorage.removeItem('currentUser'); // Si guardaste datos del usuario
+                // Opcional: Informar al backend sobre el logout si tienes lógica de sesión en servidor
+                window.location.reload(); // Recarga para reflejar el estado de logout
+            };
+
+            // if (configBtn) configBtn.style.display = 'inline-block'; // Muestra el botón de config
+
+        } else {
+            userInfo.textContent = 'No has iniciado sesión.';
+            loginBtn.textContent = 'Login';
+            loginBtn.href = 'login.html';
+            loginBtn.onclick = null; // Remueve cualquier handler de logout previo
+            // if (configBtn) configBtn.style.display = 'none'; // Oculta el botón de config
+        }
     }
+
+    updateNavBasedOnAuth(); // Llama a la función al cargar la página
 
     // También aplicamos el color de tema guardado, si existe
     const storedColor = localStorage.getItem('themeColor');
     if (storedColor) {
-      document.body.style.backgroundColor = storedColor;
+        document.body.style.backgroundColor = storedColor;
     }
   </script>
 </body>
