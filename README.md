@@ -156,9 +156,9 @@ Si quieres probar la funcionalidad de streaming y transmitir desde tu PC:
 5.  Configura lo siguiente:
     * **Servicio:** `Personalizado...` (o `Custom...`)
     * **Servidor:** `rtmp://servidor-stream.casa.local/hls`
-    * **Clave de retransmisión:** `test` (o cualquier clave que desees. Esta clave se usará en la URL HLS, ej. `http://servidor-stream.casa.local/hls/test.m3u8` si `hls_path` en Nginx está configurado como `html/hls_stream_data` y la clave es `test`, entonces el archivo será `html/hls_stream_data/test.m3u8`).
+    * **Clave de retransmisión:** `test` (o cualquier clave que desees. Esta clave se usará en la URL HLS, ej. `http://servidor-stream.casa.local/hls_stream_data/test.m3u8`).
 6.  Configura tus fuentes de video/audio en OBS (ej. capturar pantalla o juego).
 7.  Haz clic en "Iniciar transmisión" en OBS.
-8.  Luego, visita `http://servidor-stream.casa.local/` (tu página que tiene el reproductor HLS) y asegúrate de que el reproductor apunte a la URL HLS correcta (ej. `http://servidor-stream.casa.local/hls/test.m3u8`).
+8.  Luego, visita `http://servidor-stream.casa.local/` (tu página que tiene el reproductor HLS) y asegúrate de que el reproductor apunte a la URL HLS correcta (puedes abrir la carpeta nginx\html\hls_stream_data y revisar que se estén generando los archivos .ts del stream ahí). Debería de verse el stream.
 
 ---
