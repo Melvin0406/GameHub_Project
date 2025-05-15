@@ -1,37 +1,64 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\backend\server.js
-require('dotenv').config(); // Carga las variables de entorno desde .env al inicio
+// backend/server.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // Módulo path para manejar rutas de archivos
+const path = require('path'); // Asegúrate que esté importado
 
-// Importa las rutas de autenticación
 const authRoutes = require('./src/routes/authRoutes');
 const emailRoutes = require('./src/routes/emailRoutes');
+// const internalMailRoutes = require('./src/routes/internalMailRoutes'); // Si lo tenías
+const gameRoutes = require('./src/routes/gameRoutes'); // <--- NUEVA RUTA
 
-// (Opcional) Importa la conexión a la BD para asegurar que se inicialice.
-// Esto es útil si quieres que la conexión se establezca y la tabla se cree al iniciar el servidor.
-require('./src/config/database');
+require('./src/config/database'); // Inicializa la conexión y crea tablas
 
 const app = express();
 
-// Middlewares
-app.use(cors()); // Habilita CORS para todas las rutas y orígenes
-app.use(express.json()); // Permite al servidor aceptar y parsear JSON en los cuerpos de las peticiones
-app.use(express.urlencoded({ extended: true })); // Permite parsear datos de formularios URL-encoded
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos estáticos de la carpeta de uploads (si decides servir avatares, etc. desde aquí)
+// No es necesario para los mods si se descargan vía FTP directamente.
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rutas de la API
-app.use('/api/auth', authRoutes); // Monta las rutas de autenticación bajo el prefijo /api/auth
+app.use('/api/auth', authRoutes);
 app.use('/api/email', emailRoutes);
+// app.use('/api/internal-mail', internalMailRoutes); // Si lo tenías
+app.use('/api/games', gameRoutes); // <--- MONTAR NUEVA RUTA
 
-// Ruta de prueba básica
 app.get('/', (req, res) => {
     res.send('¡El backend de GameHub está funcionando!');
 });
 
-// Definir el puerto
-const PORT = process.env.PORT || 3000; // Usa el puerto definido en .env o 3000 por defecto
+// Manejador de Errores Global (debe ir DESPUÉS de todas las rutas)
+app.use((err, req, res, next) => {
+    console.error("-----------------------------------------");
+    console.error("Manejador de Errores Global Capturó:");
+    console.error("Status Code:", err.statusCode || 500);
+    console.error("Message:", err.message);
+    if (err.stack) { // No mostrar stack en producción al cliente
+        console.error("Stack:", err.stack);
+    }
+    console.error("-----------------------------------------");
 
-// Iniciar el servidor
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Error interno del servidor.';
+
+    // En desarrollo, puedes enviar más detalles, pero en producción sé más genérico
+    res.status(statusCode).json({ 
+        status: 'error',
+        statusCode: statusCode,
+        message: message,
+        // stack: process.env.NODE_ENV === 'development' ? err.stack : undefined // Opcional
+    });
+});
+
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+    if (!process.env.FTP_MODS_ROOT_PATH) {
+        console.warn("ADVERTENCIA: FTP_MODS_ROOT_PATH no está configurado en .env. La funcionalidad de subida de mods podría fallar.");
+    }
 });
