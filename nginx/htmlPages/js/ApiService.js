@@ -26,7 +26,18 @@ class ApiService extends BaseApiService {
     //     return this._request('/auth/me', 'GET', null, true);
     // }
 
-    // Puedes añadir más métodos específicos aquí si es necesario, que también pueden usar _request.
+    // Nuevos métodos para juegos y mods
+    async getAllGames() {
+        return this._request('/games', 'GET', null, false); // No requiere autenticación para listar juegos
+    }
+
+    async getGameDetails(gameId) {
+        return this._request(`/games/${gameId}`, 'GET', null, false); // No requiere autenticación para ver detalles/mods
+    }
+
+    async uploadMod(gameId, formData) {
+        return this._uploadRequest(`/games/${gameId}/mods`, formData, true);
+    }
 }
 
 // Crear una instancia global de la fachada para que sea fácil de usar en otras partes del frontend.

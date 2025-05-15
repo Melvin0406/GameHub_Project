@@ -62,6 +62,30 @@ class BaseApiService {
         }
     }
 
+    async _uploadRequest(endpoint, formData, requiresAuth = true) {
+        const url = `${this.baseUrl}${endpoint}`;
+        const headers = {}; // NO Content-Type para FormData, el navegador lo pone
+    
+        if (requiresAuth) {
+            const token = localStorage.getItem('authToken');
+            if (!token) { /* ... manejo de error de token ... */ throw new Error('Autenticación requerida.'); }
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+    
+        const config = {
+            method: 'POST', // Asumimos POST para uploads
+            headers: headers,
+            body: formData,
+        };
+    
+        try {
+            const response = await fetch(url, config);
+            const data = await response.json();
+            if (!response.ok) { /* ... manejo de error ... */ throw new Error(data.message || 'Error en subida'); }
+            return data;
+        } catch (error) { /* ... manejo de error ... */ throw error; }
+    }
+
     // Métodos "abstractos" que las subclases DEBEN implementar.
     // Representan la "interfaz" que la fachada debe cumplir.
     async login(email, password) {
