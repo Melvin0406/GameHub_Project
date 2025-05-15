@@ -6,6 +6,7 @@ const path = require('path'); // Módulo path para manejar rutas de archivos
 
 // Importa las rutas de autenticación
 const authRoutes = require('./src/routes/authRoutes');
+const emailRoutes = require('./src/routes/emailRoutes');
 
 // (Opcional) Importa la conexión a la BD para asegurar que se inicialice.
 // Esto es útil si quieres que la conexión se establezca y la tabla se cree al iniciar el servidor.
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true })); // Permite parsear datos de for
 
 // Rutas de la API
 app.use('/api/auth', authRoutes); // Monta las rutas de autenticación bajo el prefijo /api/auth
+app.use('/api/email', emailRoutes);
 
 // Ruta de prueba básica
 app.get('/', (req, res) => {

@@ -4,11 +4,6 @@
   <meta charset="UTF-8">
   <title>Enviar Correo</title>
   <style>
-    /*
-      Página para enviar correos falsos (no se envía nada real).
-      Si viene ?to=Rafael, autocompleta el destinatario.
-      Podrías integrar un backend real para mandar correos con NodeMailer o similar.
-    */
     body {
       margin: 0; 
       padding: 0;
@@ -120,27 +115,107 @@
   </footer>
 
   <script>
+    const emailForm = document.getElementById('emailForm');
+    const destinatarioInput = document.getElementById('destinatario');
+    const asuntoInput = document.getElementById('asunto');
+    const mensajeInput = document.getElementById('mensaje');
+    // (Opcional) Un área para mostrar mensajes de estado
+    const statusMessageArea = document.createElement('div');
+    statusMessageArea.style.marginTop = '1rem';
+    statusMessageArea.style.padding = '0.5rem';
+    statusMessageArea.style.borderRadius = '4px';
+    statusMessageArea.style.textAlign = 'center';
+    emailForm.parentNode.insertBefore(statusMessageArea, emailForm.nextSibling); // Inserta después del form
+
+
+    function displayStatus(message, type = 'info') {
+        statusMessageArea.textContent = message;
+        statusMessageArea.style.display = 'block';
+        if (type === 'success') {
+            statusMessageArea.style.backgroundColor = '#d4edda';
+            statusMessageArea.style.color = '#155724';
+        } else if (type === 'error') {
+            statusMessageArea.style.backgroundColor = '#f8d7da';
+            statusMessageArea.style.color = '#721c24';
+        } else {
+            statusMessageArea.style.backgroundColor = '#e2e3e5';
+            statusMessageArea.style.color = '#383d41';
+        }
+    }
+
     // Autocompletar destinatario si hay ?to= en la URL
     const urlParams = new URLSearchParams(window.location.search);
     const toParam = urlParams.get('to');
-    const destinatarioInput = document.getElementById('destinatario');
     if (toParam) {
-      destinatarioInput.value = toParam;
+        destinatarioInput.value = toParam;
     }
 
-    // Al "enviar", simplemente mostramos un alert (falso)
-    const emailForm = document.getElementById('emailForm');
-    emailForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      alert("Correo enviado (falso). Gracias.");
-      // Podrías redirigir a otra página o resetear
-      emailForm.reset();
+    // Verificar si el usuario está logueado
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        displayStatus('Necesitas iniciar sesión para enviar correos.', 'error');
+        // Deshabilitar el formulario o redirigir
+        emailForm.querySelector('button[type="submit"]').disabled = true;
+        // Opcional: Redirigir a login después de un momento
+        // setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+    }
+
+    emailForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusMessageArea.style.display = 'none'; // Ocultar mensajes anteriores
+
+        if (!authToken) {
+            displayStatus('Error: No estás autenticado.', 'error');
+            return;
+        }
+
+        const to = destinatarioInput.value;
+        const subject = asuntoInput.value;
+        const text = mensajeInput.value;
+
+        if (!to || !subject || !text) {
+            displayStatus('Por favor, completa todos los campos.', 'error');
+            return;
+        }
+        
+        const submitButton = emailForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Enviando...';
+
+        try {
+            const response = await fetch('/api/email/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}` // Envía el token JWT
+                },
+                body: JSON.stringify({ to, subject, text })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                displayStatus(data.message || 'Correo enviado exitosamente.', 'success');
+                emailForm.reset(); // Limpia el formulario
+                if (toParam) { // Si había un ?to=, lo reestablece
+                    destinatarioInput.value = toParam;
+                }
+            } else {
+                displayStatus(data.message || 'Error al enviar el correo.', 'error');
+            }
+        } catch (error) {
+            console.error('Error al enviar la petición:', error);
+            displayStatus('Error de red al intentar enviar el correo.', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Enviar';
+        }
     });
 
     // Aplica el color de tema, si existe
     const storedColor = localStorage.getItem('themeColor');
     if (storedColor) {
-      document.body.style.backgroundColor = storedColor;
+        document.body.style.backgroundColor = storedColor;
     }
   </script>
 </body>
