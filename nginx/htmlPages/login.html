@@ -18,6 +18,7 @@
         a { color: #007BFF; text-decoration: none; }
         a:hover { text-decoration: underline; }
     </style>
+    <script src="js/BaseApiService.js"></script> <script src="js/ApiService.js"></script>
 </head>
 <body>
     <div class="container">
@@ -38,48 +39,60 @@
     </div>
 
     <script>
+        // El script de tu página login.html ahora usa la instancia global 'apiService'
+        // que fue creada en ApiService.js
+
         const loginForm = document.getElementById('loginForm');
-        const messageArea = document.getElementById('messageArea');
+        const messageArea = document.getElementById('messageArea'); // Asegúrate de tener este elemento
 
         loginForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Evita el envío tradicional del formulario
-
+            event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            messageArea.style.display = 'none';
-            messageArea.className = 'message';
+            // Limpiar mensajes anteriores
+            if (messageArea) {
+                messageArea.style.display = 'none';
+                messageArea.textContent = '';
+                messageArea.className = 'message'; // Resetea clases
+            }
+            
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Ingresando...';
 
             try {
-                // Nginx redirigirá /api/auth/login a tu backend Node.js
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
+                const data = await apiService.login(email, password); // ¡Usando la Fachada!
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Guardar el token JWT en localStorage
-                    localStorage.setItem('authToken', data.token);
-                    // Opcional: guardar información del usuario si la necesitas directamente
-                    // localStorage.setItem('currentUser', JSON.stringify(data.user));
-                    
-                    // Redirigir a la página principal o al dashboard
-                    window.location.href = 'index.html'; // O la página que prefieras
+                localStorage.setItem('authToken', data.token);
+                
+                const redirectUrl = localStorage.getItem('loginRedirect');
+                if (redirectUrl) {
+                    localStorage.removeItem('loginRedirect');
+                    window.location.href = redirectUrl;
                 } else {
-                    messageArea.textContent = data.message || 'Error al iniciar sesión. Verifica tus credenciales.';
-                    messageArea.classList.add('error');
-                    messageArea.style.display = 'block';
+                    window.location.href = 'index.html';
                 }
+
             } catch (error) {
                 console.error('Error en el proceso de login:', error);
-                messageArea.textContent = 'Ocurrió un error de red. Por favor, intenta más tarde.';
-                messageArea.classList.add('error');
-                messageArea.style.display = 'block';
+                let displayMessage = error.message || 'Ocurrió un error. Intenta más tarde.';
+                if (error.requiresLogin) { // Error específico de BaseApiService
+                    // Podrías querer redirigir o mostrar un mensaje específico
+                    displayMessage = 'Autenticación requerida. Serás redirigido al login.';
+                    // setTimeout(() => window.location.href = 'login.html', 2000);
+                }
+                
+                if (messageArea) {
+                    messageArea.textContent = displayMessage;
+                    messageArea.classList.add('error'); // Asume que tienes una clase CSS 'error'
+                    messageArea.style.display = 'block';
+                } else {
+                    alert(displayMessage); // Fallback si no hay messageArea
+                }
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Login';
             }
         });
     </script>
