@@ -19,6 +19,7 @@
         a { color: #007BFF; text-decoration: none; }
         a:hover { text-decoration: underline; }
     </style>
+    <script src="js/BaseApiService.js"></script> <script src="js/ApiService.js"></script>
 </head>
 <body>
     <div class="container">
@@ -57,37 +58,40 @@
             messageArea.className = 'message'; // Resetea clases de estilo
 
             try {
-                // Nginx redirigirá /api/auth/signup a tu backend Node.js
-                const response = await fetch('/api/auth/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, email, password }),
-                });
+            const data = await apiService.signup(username, email, password);
 
-                const data = await response.json();
+            if (messageArea) {
+                messageArea.textContent = data.message + " Redirigiendo a login...";
+                messageArea.classList.add('success');
+                messageArea.style.display = 'block';
+            } else {
+                alert(data.message + " Redirigiendo a login..."); // Fallback
+            }
+            
+            signupForm.reset(); 
+            setTimeout(() => {
+                window.location.href = 'login.html'; 
+            }, 2000); 
+        } catch (error) {
+            console.error('Error en el proceso de registro:', error);
+            let displayMsg = error.message || 'Error al registrar. Intenta de nuevo.';
+            // error.status podría usarse para dar mensajes más específicos
+            if (error.status === 409) { // 409 Conflict (username/email ya existe)
+                displayMsg = error.message; // El backend ya debería dar un buen mensaje
+            }
 
-                if (response.ok) { // response.status >= 200 && response.status < 300
-                    messageArea.textContent = data.message + " Redirigiendo a login...";
-                    messageArea.classList.add('success');
-                    messageArea.style.display = 'block';
-                    signupForm.reset(); // Limpia el formulario
-                    setTimeout(() => {
-                        window.location.href = 'login.html'; // Redirige a la página de login
-                    }, 2000); // Espera 2 segundos
-                } else {
-                    messageArea.textContent = data.message || 'Error al registrar. Intenta de nuevo.';
-                    messageArea.classList.add('error');
-                    messageArea.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error en el proceso de registro:', error);
-                messageArea.textContent = 'Ocurrió un error de red. Por favor, intenta más tarde.';
+            if (messageArea) {
+                messageArea.textContent = displayMsg;
                 messageArea.classList.add('error');
                 messageArea.style.display = 'block';
+            } else {
+                alert(displayMsg); // Fallback
             }
-        });
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Registrarse';
+        }
+    });
     </script>
 </body>
 </html>

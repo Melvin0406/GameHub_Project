@@ -77,6 +77,7 @@
       color: #fff;
     }
   </style>
+  <script src="js/BaseApiService.js"></script> <script src="js/ApiService.js"></script>
 </head>
 <body>
   <!-- 
@@ -155,10 +156,7 @@
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
         displayStatus('Necesitas iniciar sesión para enviar correos.', 'error');
-        // Deshabilitar el formulario o redirigir
         emailForm.querySelector('button[type="submit"]').disabled = true;
-        // Opcional: Redirigir a login después de un momento
-        // setTimeout(() => { window.location.href = 'login.html'; }, 3000);
     }
 
     emailForm.addEventListener('submit', async (e) => {
@@ -184,29 +182,22 @@
         submitButton.textContent = 'Enviando...';
 
         try {
-            const response = await fetch('/api/email/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}` // Envía el token JWT
-                },
-                body: JSON.stringify({ to, subject, text })
-            });
+            const data = await apiService.sendEmail(to, subject, text);
 
-            const data = await response.json();
-
-            if (response.ok) {
-                displayStatus(data.message || 'Correo enviado exitosamente.', 'success');
-                emailForm.reset(); // Limpia el formulario
-                if (toParam) { // Si había un ?to=, lo reestablece
-                    destinatarioInput.value = toParam;
-                }
-            } else {
-                displayStatus(data.message || 'Error al enviar el correo.', 'error');
+            displayStatus(data.message || 'Correo enviado exitosamente.', 'success');
+            emailForm.reset();
+            if (toParam) {
+                destinatarioInput.value = toParam;
             }
         } catch (error) {
-            console.error('Error al enviar la petición:', error);
-            displayStatus('Error de red al intentar enviar el correo.', 'error');
+            console.error('Error al enviar el correo:', error);
+            let displayMsg = error.message || 'Error desconocido al enviar el correo.';
+            if (error.requiresLogin) {
+                displayMsg = "Tu sesión ha expirado o no es válida. Por favor, inicia sesión de nuevo.";
+                // Opcional: redirigir a login
+                setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+            }
+            displayStatus(displayMsg, 'error');
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Enviar';

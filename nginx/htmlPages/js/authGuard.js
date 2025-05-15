@@ -7,9 +7,6 @@
     const currentPage = window.location.pathname.split('/').pop(); // Obtiene el nombre del archivo actual
 
     if (!authToken && !publicPages.includes(currentPage)) {
-        // No hay token Y no estamos en una página pública (login/signup)
-        alert('Necesitas iniciar sesión para acceder a esta página.'); // Opcional: un mensaje
-
         // Guardar la página actual para redirigir después del login (opcional)
         const redirectTo = window.location.pathname + window.location.search;
         localStorage.setItem('loginRedirect', redirectTo); // Guardamos a dónde quería ir
