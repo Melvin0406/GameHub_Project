@@ -6,6 +6,8 @@ backend/gamehub.sqlite-journal # Archivos temporales de SQLite
 backend/npm-debug.log*
 backend/yarn-debug.log*
 backend/yarn-error.log*
+backend/gamehub_local_db.sqlite
+
 # Si tienes una carpeta de logs en el backend
 backend/logs/
 
