@@ -6,8 +6,8 @@ const path = require('path'); // Asegúrate que esté importado
 
 const authRoutes = require('./src/routes/authRoutes');
 const emailRoutes = require('./src/routes/emailRoutes');
-// const internalMailRoutes = require('./src/routes/internalMailRoutes'); // Si lo tenías
 const gameRoutes = require('./src/routes/gameRoutes'); // <--- NUEVA RUTA
+const internalMailRoutes = require('./src/routes/internalMailRoutes');
 
 require('./src/config/database'); // Inicializa la conexión y crea tablas
 
@@ -24,8 +24,8 @@ app.use(express.urlencoded({ extended: true }));
 // Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/email', emailRoutes);
-// app.use('/api/internal-mail', internalMailRoutes); // Si lo tenías
-app.use('/api/games', gameRoutes); // <--- MONTAR NUEVA RUTA
+app.use('/api/games', gameRoutes);
+app.use('/api/internal-mail', internalMailRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡El backend de GameHub está funcionando!');

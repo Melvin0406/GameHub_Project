@@ -38,6 +38,27 @@ class ApiService extends BaseApiService {
     async uploadMod(gameId, formData) {
         return this._uploadRequest(`/games/${gameId}/mods`, formData, true);
     }
+
+    async getInternalInbox() {
+        return this._request('/internal-mail/inbox', 'GET', null, true);
+    }
+
+    async getInternalSentMessages() {
+        return this._request('/internal-mail/sent', 'GET', null, true);
+    }
+
+    async getInternalMessageById(messageId) {
+        return this._request(`/internal-mail/${messageId}`, 'GET', null, true);
+    }
+
+    async sendInternalMessage(recipientUsername, subject, body) {
+        return this._request('/internal-mail/send', 'POST', { recipientUsername, subject, body }, true);
+    }
+
+    async deleteInternalMessage(messageId) {
+        // Asumiendo que el backend espera un PUT para el borrado suave
+        return this._request(`/internal-mail/${messageId}/delete`, 'PUT', null, true);
+    }
 }
 
 // Crear una instancia global de la fachada para que sea fácil de usar en otras partes del frontend.
