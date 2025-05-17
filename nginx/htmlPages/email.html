@@ -1,214 +1,267 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Enviar Correo</title>
-  <script src="js/authGuard.js"></script>
-  <style>
-    body {
-      margin: 0; 
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 1rem;
-      text-decoration: none;
-    }
-    main {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    form {
-      background-color: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 100%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    form h2 {
-      margin-top: 0;
-    }
-    label {
-      display: block;
-      margin: 1rem 0 0.5rem;
-      font-weight: bold;
-    }
-    input[type="text"],
-    input[type="email"],
-    textarea {
-      width: 100%;
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    textarea {
-      min-height: 100px;
-    }
-    button {
-      background-color: #007BFF;
-      color: #fff;
-      border: none;
-      padding: 0.8rem 1.5rem;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    footer {
-      text-align: center;
-      padding: 0.5rem;
-      background-color: #007BFF;
-      color: #fff;
-    }
-  </style>
-  <script src="js/BaseApiService.js"></script> <script src="js/ApiService.js"></script>
+    <meta charset="UTF-8">
+    <title>Enviar Correo</title>
+    <script src="js/authGuard.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e; /* Fondo oscuro similar */
+            color: #e0e0e0; /* Texto claro similar */
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #121212; /* Header más oscuro */
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+            border-bottom: 3px solid #007bff; /* Borde azul característico */
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em; /* Tamaño de fuente similar */
+            color: #00aaff; /* Color del título similar */
+        }
+
+        nav {
+            background-color: #252525; /* Navegación un poco más clara que el header */
+            padding: 0.75rem 0;
+            text-align: center;
+            margin-top: 1rem; /* Añadido margen superior */
+        }
+
+        nav a {
+            color: #00aaff; /* Color de los enlaces similar */
+            margin: 0 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em; /* Tamaño de fuente similar */
+            transition: color 0.3s;
+        }
+
+        nav a:hover, nav a.active {
+            color: #007bff; /* Hover similar */
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem; /* Añadir padding al main */
+        }
+
+        form {
+            background-color: #2c2c2c; /* Fondo oscuro para el formulario */
+            padding: 2.5rem;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); /* Sombra similar */
+        }
+
+        form h2 {
+            margin-top: 0;
+            color: #00aaff; /* Título del formulario similar */
+            font-size: 2.2em;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        label {
+            display: block;
+            margin: 1rem 0 0.5rem;
+            font-weight: bold;
+            color: #ccc; /* Color de la etiqueta */
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: calc(100% - 16px); /* Ajustar ancho con padding */
+            padding: 0.8rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #383838; /* Fondo de los inputs */
+            color: #e0e0e0; /* Color del texto en inputs */
+            font-size: 1em;
+        }
+
+        textarea {
+            min-height: 120px; /* Aumentar un poco la altura del textarea */
+            resize: vertical;
+        }
+
+        button {
+            display: block; /* Para que ocupe todo el ancho y esté centrado */
+            width: 100%;
+            background: linear-gradient(45deg, #007bff, #0056b3); /* Gradiente similar */
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: 1.5rem; /* Más espacio superior */
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #0056b3, #003d80); /* Hover similar */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,123,255,0.5);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem 0; /* Más padding vertical */
+            background-color: #121212; /* Footer oscuro similar al header */
+            color: #ccc; /* Color de texto del footer */
+            border-top: 3px solid #007bff; /* Borde superior azul */
+        }
+    </style>
+    <script src="js/BaseApiService.js"></script> <script src="js/ApiService.js"></script>
 </head>
 <body>
-  <!-- 
-    Formulario de "correo" falso. 
-    Al darle Enviar, no hace nada real, solo muestra un alert.
-    Si la URL dice ?to=Rafael, el campo destinatario se autocompleta. 
-  -->
-  <header>
-    <h1>Enviar Correo (Falso)</h1>
-    <nav>
-      <a href="index.html">Inicio</a>
-      <a href="games.html">Juegos</a>
-      <a href="startStream.html">Iniciar Stream</a>
-      <a href="messages.html">Mensajes Privados</a>
-      <a href="config.html">Configuración</a>
-    </nav>
-  </header>
+    <header>
+        <h1>Enviar Correo (Falso)</h1>
+        <nav>
+            <a href="index.html">Inicio</a>
+            <a href="games.html">Juegos</a>
+            <a href="startStream.html">Iniciar Stream</a>
+            <a href="messages.html">Mensajes Privados</a>
+            <a href="config.html">Configuración</a>
+        </nav>
+    </header>
 
-  <main>
-    <form id="emailForm">
-      <h2>Redactar Correo</h2>
-      <label for="destinatario">Destinatario (puede ser alguien de la red o externo):</label>
-      <input type="text" id="destinatario" placeholder="ejemplo@correo.com" required>
-      
-      <label for="asunto">Asunto:</label>
-      <input type="text" id="asunto" placeholder="Asunto del mensaje" required>
+    <main>
+        <form id="emailForm">
+            <h2>Redactar Correo</h2>
+            <label for="destinatario">Destinatario (puede ser alguien de la red o externo):</label>
+            <input type="text" id="destinatario" placeholder="ejemplo@correo.com" required>
 
-      <label for="mensaje">Mensaje:</label>
-      <textarea id="mensaje" placeholder="Escribe tu mensaje aquí..." required></textarea>
+            <label for="asunto">Asunto:</label>
+            <input type="text" id="asunto" placeholder="Asunto del mensaje" required>
 
-      <button type="submit">Enviar</button>
-    </form>
-  </main>
+            <label for="mensaje">Mensaje:</label>
+            <textarea id="mensaje" placeholder="Escribe tu mensaje aquí..." required></textarea>
 
-  <footer>
-    <p>© 2025 Mi Plataforma de Streaming</p>
-  </footer>
+            <button type="submit">Enviar</button>
+        </form>
+    </main>
 
-  <script>
-    const emailForm = document.getElementById('emailForm');
-    const destinatarioInput = document.getElementById('destinatario');
-    const asuntoInput = document.getElementById('asunto');
-    const mensajeInput = document.getElementById('mensaje');
-    // (Opcional) Un área para mostrar mensajes de estado
-    const statusMessageArea = document.createElement('div');
-    statusMessageArea.style.marginTop = '1rem';
-    statusMessageArea.style.padding = '0.5rem';
-    statusMessageArea.style.borderRadius = '4px';
-    statusMessageArea.style.textAlign = 'center';
-    emailForm.parentNode.insertBefore(statusMessageArea, emailForm.nextSibling); // Inserta después del form
+    <footer>
+        <p>© 2025 Mi Plataforma de Streaming</p>
+    </footer>
+
+    <script>
+        const emailForm = document.getElementById('emailForm');
+        const destinatarioInput = document.getElementById('destinatario');
+        const asuntoInput = document.getElementById('asunto');
+        const mensajeInput = document.getElementById('mensaje');
+        // (Opcional) Un área para mostrar mensajes de estado
+        const statusMessageArea = document.createElement('div');
+        statusMessageArea.style.marginTop = '1rem';
+        statusMessageArea.style.padding = '0.8rem';
+        statusMessageArea.style.borderRadius = '5px';
+        statusMessageArea.style.textAlign = 'center';
+        statusMessageArea.style.fontWeight = 'bold';
+        statusMessageArea.style.display = 'none'; // Inicialmente oculto
+        emailForm.parentNode.insertBefore(statusMessageArea, emailForm.nextSibling); // Inserta después del form
 
 
-    function displayStatus(message, type = 'info') {
-        statusMessageArea.textContent = message;
-        statusMessageArea.style.display = 'block';
-        if (type === 'success') {
-            statusMessageArea.style.backgroundColor = '#d4edda';
-            statusMessageArea.style.color = '#155724';
-        } else if (type === 'error') {
-            statusMessageArea.style.backgroundColor = '#f8d7da';
-            statusMessageArea.style.color = '#721c24';
-        } else {
-            statusMessageArea.style.backgroundColor = '#e2e3e5';
-            statusMessageArea.style.color = '#383d41';
+        function displayStatus(message, type = 'info') {
+            statusMessageArea.textContent = message;
+            statusMessageArea.style.display = 'block';
+            if (type === 'success') {
+                statusMessageArea.style.backgroundColor = '#28a745';
+                statusMessageArea.style.color = 'white';
+            } else if (type === 'error') {
+                statusMessageArea.style.backgroundColor = '#dc3545';
+                statusMessageArea.style.color = 'white';
+            } else {
+                statusMessageArea.style.backgroundColor = '#00aaff';
+                statusMessageArea.style.color = 'white';
+            }
         }
-    }
 
-    // Autocompletar destinatario si hay ?to= en la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const toParam = urlParams.get('to');
-    if (toParam) {
-        destinatarioInput.value = toParam;
-    }
+        // Autocompletar destinatario si hay ?to= en la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const toParam = urlParams.get('to');
+        if (toParam) {
+            destinatarioInput.value = toParam;
+        }
 
-    // Verificar si el usuario está logueado
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        displayStatus('Necesitas iniciar sesión para enviar correos.', 'error');
-        emailForm.querySelector('button[type="submit"]').disabled = true;
-    }
-
-    emailForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        statusMessageArea.style.display = 'none'; // Ocultar mensajes anteriores
-
+        // Verificar si el usuario está logueado
+        const authToken = localStorage.getItem('authToken');
         if (!authToken) {
-            displayStatus('Error: No estás autenticado.', 'error');
-            return;
+            displayStatus('Necesitas iniciar sesión para enviar correos.', 'error');
+            emailForm.querySelector('button[type="submit"]').disabled = true;
         }
 
-        const to = destinatarioInput.value;
-        const subject = asuntoInput.value;
-        const text = mensajeInput.value;
+        emailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            statusMessageArea.style.display = 'none'; // Ocultar mensajes anteriores
 
-        if (!to || !subject || !text) {
-            displayStatus('Por favor, completa todos los campos.', 'error');
-            return;
-        }
-        
-        const submitButton = emailForm.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Enviando...';
-
-        try {
-            const data = await apiService.sendEmail(to, subject, text);
-
-            displayStatus(data.message || 'Correo enviado exitosamente.', 'success');
-            emailForm.reset();
-            if (toParam) {
-                destinatarioInput.value = toParam;
+            if (!authToken) {
+                displayStatus('Error: No estás autenticado.', 'error');
+                return;
             }
-        } catch (error) {
-            console.error('Error al enviar el correo:', error);
-            let displayMsg = error.message || 'Error desconocido al enviar el correo.';
-            if (error.requiresLogin) {
-                displayMsg = "Tu sesión ha expirado o no es válida. Por favor, inicia sesión de nuevo.";
-                // Opcional: redirigir a login
-                setTimeout(() => { window.location.href = 'login.html'; }, 3000);
-            }
-            displayStatus(displayMsg, 'error');
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Enviar';
-        }
-    });
 
-    // Aplica el color de tema, si existe
-    const storedColor = localStorage.getItem('themeColor');
-    if (storedColor) {
-        document.body.style.backgroundColor = storedColor;
-    }
-  </script>
+            const to = destinatarioInput.value;
+            const subject = asuntoInput.value;
+            const text = mensajeInput.value;
+
+            if (!to || !subject || !text) {
+                displayStatus('Por favor, completa todos los campos.', 'error');
+                return;
+            }
+
+            const submitButton = emailForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando...';
+
+            try {
+                const data = await apiService.sendEmail(to, subject, text);
+
+                displayStatus(data.message || 'Correo enviado exitosamente.', 'success');
+                emailForm.reset();
+                if (toParam) {
+                    destinatarioInput.value = toParam;
+                }
+            } catch (error) {
+                console.error('Error al enviar el correo:', error);
+                let displayMsg = error.message || 'Error desconocido al enviar el correo.';
+                if (error.requiresLogin) {
+                    displayMsg = "Tu sesión ha expirado o no es válida. Por favor, inicia sesión de nuevo.";
+                    // Opcional: redirigir a login
+                    setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+                }
+                displayStatus(displayMsg, 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Enviar';
+            }
+        });
+
+        // Aplica el color de tema, si existe
+        const storedColor = localStorage.getItem('themeColor');
+        if (storedColor) {
+            document.body.style.backgroundColor = storedColor;
+        }
+    </script>
 </body>
 </html>

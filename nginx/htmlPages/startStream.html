@@ -1,125 +1,166 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Iniciar Stream</title>
-  <script src="js/authGuard.js"></script>
-  <style>
-    /*
-      Permite "iniciar" un stream (falso).
-      En un sistema real, enviarías estos datos al servidor y se generaría un ID de stream. 
-    */
-    body {
-      margin: 0; 
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-    }
-    header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 1rem;
-      text-decoration: none;
-    }
-    main {
-      padding: 2rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    label {
-      display: block;
-      margin: 1rem 0 0.5rem;
-      font-weight: bold;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    select {
-      width: 100%;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    button {
-      background-color: #007BFF;
-      color: #fff;
-      border: none;
-      padding: 0.8rem 1.2rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    #resultMessage {
-      margin-top: 1rem;
-      color: green;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Iniciar Stream</title>
+    <script src="js/authGuard.js"></script>
+    <style>
+        /*
+          Permite "iniciar" un stream (falso).
+          En un sistema real, enviarías estos datos al servidor y se generaría un ID de stream.
+         */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e; /* Fondo oscuro similar */
+            color: #e0e0e0; /* Texto claro similar */
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #121212; /* Header más oscuro */
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+            border-bottom: 3px solid #007bff; /* Borde azul característico */
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em; /* Tamaño de fuente similar */
+            color: #00aaff; /* Color del título similar */
+        }
+
+        nav {
+            background-color: #252525; /* Navegación un poco más clara que el header */
+            padding: 0.75rem 0;
+            text-align: center;
+            margin-top: 1rem; /* Añadido margen superior */
+        }
+
+        nav a {
+            color: #00aaff; /* Color de los enlaces similar */
+            margin: 0 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em; /* Tamaño de fuente similar */
+            transition: color 0.3s;
+        }
+
+        nav a:hover, nav a.active {
+            color: #007bff; /* Hover similar */
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 600px; /* Ancho máximo similar */
+            margin: 2rem auto; /* Centrado similar */
+            background-color: #2c2c2c; /* Fondo del formulario */
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        label {
+            display: block;
+            margin: 1rem 0 0.5rem;
+            font-weight: bold;
+            color: #ccc; /* Color de la etiqueta */
+        }
+
+        input[type="text"],
+        select {
+            width: calc(100% - 16px); /* Ajustar ancho con padding */
+            padding: 0.8rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #383838; /* Fondo de los inputs */
+            color: #e0e0e0; /* Color del texto en inputs */
+            font-size: 1em;
+        }
+
+        button {
+            display: inline-block;
+            background: linear-gradient(45deg, #007bff, #0056b3); /* Gradiente similar */
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #0056b3, #003d80); /* Hover similar */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,123,255,0.5);
+        }
+
+        #resultMessage {
+            margin-top: 1.5rem;
+            color: #00ddff; /* Color del mensaje de resultado */
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1em;
+        }
+    </style>
 </head>
 <body>
-  <!--
-    Permite elegir un nombre para el stream y un juego.
-    No crea nada real, solo muestra un mensaje de confirmación.
-  -->
-  <header>
-    <h1>Iniciar un Nuevo Stream</h1>
-    <nav>
-      <a href="index.html">Inicio</a>
-      <a href="games.html">Juegos</a>
-      <a href="messages.html">Mensajes Privados</a>
-      <a href="email.html">Enviar Correo</a>
-      <a href="config.html">Configuración</a>
-    </nav>
-  </header>
+    <header>
+        <h1>Iniciar un Nuevo Stream</h1>
+        <nav>
+            <a href="index.html">Inicio</a>
+            <a href="games.html">Juegos</a>
+            <a href="messages.html">Mensajes Privados</a>
+            <a href="email.html">Enviar Correo</a>
+            <a href="config.html">Configuración</a>
+        </nav>
+    </header>
 
-  <main>
-    <form id="streamForm">
-      <label for="streamName">Nombre del Stream:</label>
-      <input type="text" id="streamName" required>
+    <main>
+        <form id="streamForm">
+            <label for="streamName">Nombre del Stream:</label>
+            <input type="text" id="streamName" required>
 
-      <label for="gameSelect">Seleccionar Juego:</label>
-      <select id="gameSelect" required>
-        <option value="">(Elige un juego)</option>
-        <option value="1">Juego 1</option>
-        <option value="2">Juego 2</option>
-        <option value="3">Juego 3</option>
-      </select>
+            <label for="gameSelect">Seleccionar Juego:</label>
+            <select id="gameSelect" required>
+                <option value="">(Elige un juego)</option>
+                <option value="1">Juego 1</option>
+                <option value="2">Juego 2</option>
+                <option value="3">Juego 3</option>
+            </select>
 
-      <button type="submit">Iniciar Stream (falso)</button>
-    </form>
-    <p id="resultMessage"></p>
-  </main>
+            <button type="submit">Iniciar Stream (falso)</button>
+        </form>
+        <p id="resultMessage"></p>
+    </main>
 
-  <script>
-    const streamForm = document.getElementById('streamForm');
-    const resultMessage = document.getElementById('resultMessage');
+    <script>
+        const streamForm = document.getElementById('streamForm');
+        const resultMessage = document.getElementById('resultMessage');
 
-    streamForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const streamName = document.getElementById('streamName').value.trim();
-      const gameSelected = document.getElementById('gameSelect').value;
+        streamForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const streamName = document.getElementById('streamName').value.trim();
+            const gameSelected = document.getElementById('gameSelect').value;
 
-      if (!streamName || !gameSelected) return;
+            if (!streamName || !gameSelected) return;
 
-      // Simulamos "crear stream"
-      // En un proyecto real, aquí harías una petición POST al servidor
-      resultMessage.textContent = `Has iniciado el stream "${streamName}" para el juego ${gameSelected}. (Falso)`;
-      resultMessage.style.color = "green";
-    });
+            // Simulamos "crear stream"
+            // En un proyecto real, aquí harías una petición POST al servidor
+            resultMessage.textContent = `Has iniciado el stream "${streamName}" para el juego ${gameSelected}. (Falso)`;
+            resultMessage.style.color = "#00ddff";
+        });
 
-    // Aplica el color de tema si existe
-    const storedColor = localStorage.getItem('themeColor');
-    if (storedColor) {
-      document.body.style.backgroundColor = storedColor;
-    }
-  </script>
+        // Aplica el color de tema si existe
+        const storedColor = localStorage.getItem('themeColor');
+        if (storedColor) {
+            document.body.style.backgroundColor = storedColor;
+        }
+    </script>
 </body>
 </html>
