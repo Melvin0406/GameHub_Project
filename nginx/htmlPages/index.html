@@ -1,132 +1,171 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Inicio - Plataforma de Streaming</title>
-  <script src="js/authGuard.js"></script>
-  <style>
-    /* Estilos básicos de la página de inicio */
-    body {
-      margin: 0; 
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-    }
-    header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 1rem;
-      text-decoration: none;
-    }
-    main {
-      text-align: center;
-      padding: 2rem;
-    }
-    .boton {
-      display: inline-block;
-      margin: 1rem;
-      padding: 0.8rem 1.2rem;
-      background-color: #007BFF;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-    .boton:hover {
-      background-color: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Inicio - Plataforma de Streaming</title>
+    <script src="js/authGuard.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e; /* Fondo oscuro similar */
+            color: #e0e0e0; /* Texto claro similar */
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #121212; /* Header más oscuro */
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+            border-bottom: 3px solid #007bff; /* Borde azul característico */
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em; /* Tamaño de fuente similar */
+            color: #00aaff; /* Color del título similar */
+        }
+
+        nav {
+            background-color: #252525; /* Navegación un poco más clara que el header */
+            padding: 0.75rem 0;
+            text-align: center;
+            margin-top: 1rem; /* Añadido margen superior para separarlo del header */
+        }
+
+        nav a {
+            color: #00aaff; /* Color de los enlaces similar */
+            margin: 0 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em; /* Tamaño de fuente similar */
+            transition: color 0.3s;
+        }
+
+        nav a:hover, nav a.active {
+            color: #007bff; /* Hover similar */
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1300px; /* Ancho máximo similar */
+            margin: 2rem auto; /* Centrado similar */
+            text-align: center; /* Mantener el centrado del contenido principal */
+        }
+
+        main h2 {
+            font-size: 2.2em; /* Tamaño de fuente similar al título de sección */
+            margin-bottom: 1.5rem; /* Más espacio debajo del título */
+            color: #00aaff; /* Color similar */
+            text-transform: uppercase; /* Añadido uppercase para más similitud */
+            letter-spacing: 1px; /* Espaciado de letras sutil */
+        }
+
+        #userInfo {
+            font-size: 1em; /* Ajustar tamaño de fuente */
+            margin-bottom: 2rem;
+            color: #b0b0b0; /* Color de texto similar */
+        }
+
+        .button-grid {
+            display: grid; /* Usar grid para una mejor disposición */
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Columnas autoajustables */
+            gap: 1.5rem; /* Espacio entre botones */
+            margin-top: 2rem;
+            max-width: 600px; /* Ancho máximo del grid de botones */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .boton {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Centrar icono y texto */
+            gap: 0.75rem;
+            padding: 0.8rem 1.2rem;
+            background: linear-gradient(45deg, #007bff, #0056b3); /* Gradiente similar */
+            color: white; /* Texto blanco */
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Añadir transición para box-shadow */
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3); /* Sombra suave */
+        }
+
+        .boton i {
+            font-size: 1.2em; /* Iconos un poco más grandes */
+        }
+
+        .boton:hover {
+            background: linear-gradient(45deg, #0056b3, #003d80); /* Hover similar */
+            transform: translateY(-3px); /* Ligeramente elevado al pasar el ratón */
+            box-shadow: 0 6px 15px rgba(0,123,255,0.5); /* Sombra más intensa al hacer hover */
+        }
+    </style>
 </head>
 <body>
-  <!-- 
-    Página principal (inicio). Muestra si hay un usuario "logueado" (falso).
-    Usa localStorage para guardar "username" y "themeColor".
-  -->
-  <header>
-    <h1>Plataforma de Streaming - Inicio</h1>
-    <nav>
-      <!-- Enlaces a otras secciones -->
-      <a href="index.html">Inicio</a>
-      <a href="games.html">Juegos</a>
-      <a href="startStream.html">Iniciar Stream</a>
-      <a href="messages.html">Mensajes Privados</a>
-      <a href="email.html">Enviar Correo</a>
-      <a href="config.html">Configuración</a>
-    </nav>
-  </header>
+    <header>
+        <h1>Plataforma de Streaming - Inicio</h1>
+        <nav>
+            <a href="index.html" class="active">Inicio</a>
+            <a href="games.html">Juegos</a>
+            <a href="startStream.html">Iniciar Stream</a>
+            <a href="messages.html">Mensajes Privados</a>
+            <a href="email.html">Enviar Correo</a>
+            <a href="config.html">Configuración</a>
+        </nav>
+    </header>
 
-  <main>
-    <h2>Bienvenido a la Plataforma de S</h2>
-    <p id="userInfo"></p>
-    <!-- Botones de atajo -->
-    <a class="boton" href="games.html">Ver Juegos Disponibles</a>
-    <a class="boton" href="startStream.html">Iniciar un Stream</a>
-    <a class="boton" id="streamLink">Ver Stream en Vivo</a>
-    <br>
-    <!-- Botón de Login / Logout dinámico -->
-    <a class="boton" href="login.html" id="loginBtn">Login</a>
-  </main>
+    <main>
+        <h2>¡Bienvenido a la Plataforma de Streaming!</h2>
+        <p id="userInfo"></p>
 
-  <script>
-    // Detecta el dominio actual y cambia el enlace al stream
-    const streamLink = document.getElementById('streamLink');
-    if (window.location.hostname.includes('cetys')) {
-        streamLink.href = 'http://servidor-stream.cetys.local';
-    } else {
-        streamLink.href = 'http://servidor-stream.casa.local';
-    }
-    
-    // --- Lógica de Autenticación Actualizada ---
-    const authToken = localStorage.getItem('authToken');
-    const userInfo = document.getElementById('userInfo'); // Asumo que tienes un <p id="userInfo"></p> o similar
-    const loginBtn = document.getElementById('loginBtn'); // Asumo que tienes <a id="loginBtn">Login</a>
-    // Podrías querer un botón de Configuración o Perfil que solo aparezca si está logueado
-    // const configBtn = document.getElementById('configBtn'); // Si tienes <a id="configBtn">Configuración</a>
+        <div class="button-grid">
+            <a class="boton" href="games.html"><i class="fas fa-gamepad"></i> Ver Juegos</a>
+            <a class="boton" href="startStream.html"><i class="fas fa-video"></i> Iniciar Stream</a>
+            <a class="boton" id="streamLink"><i class="fas fa-broadcast-tower"></i> Ver en Vivo</a>
+            <a class="boton" href="login.html" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</a>
+        </div>
+    </main>
 
-    function updateNavBasedOnAuth() {
-        if (authToken) {
-            // Para obtener el nombre de usuario, podrías decodificar el token (requiere una librería como jwt-decode en el frontend)
-            // o, mejor aún, tener un endpoint en el backend /api/auth/me que devuelva los datos del usuario.
-            // Por ahora, un mensaje genérico:
-            // O si guardaste el usuario en login: const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            // if (currentUser) {
-            //    userInfo.textContent = `Bienvenido, ${currentUser.username}!`;
-            // } else {
-            userInfo.textContent = '¡Bienvenido! Sesión iniciada.'; // Mensaje simple
-            // }
-            
-            loginBtn.textContent = 'Cerrar Sesión';
-            loginBtn.href = '#logout'; // Evita ir a login.html directamente
-
-            loginBtn.onclick = () => { // Usamos onclick para poder removerlo si es necesario o simplemente sobreescribir
-                localStorage.removeItem('authToken');
-                // localStorage.removeItem('currentUser'); // Si guardaste datos del usuario
-                // Opcional: Informar al backend sobre el logout si tienes lógica de sesión en servidor
-                window.location.reload(); // Recarga para reflejar el estado de logout
-            };
-
-            // if (configBtn) configBtn.style.display = 'inline-block'; // Muestra el botón de config
-
+    <script>
+        const streamLink = document.getElementById('streamLink');
+        if (window.location.hostname.includes('cetys')) {
+            streamLink.href = 'http://servidor-stream.cetys.local';
         } else {
-            userInfo.textContent = 'No has iniciado sesión.';
-            loginBtn.textContent = 'Login';
-            loginBtn.href = 'login.html';
-            loginBtn.onclick = null; // Remueve cualquier handler de logout previo
-            // if (configBtn) configBtn.style.display = 'none'; // Oculta el botón de config
+            streamLink.href = 'http://servidor-stream.casa.local';
         }
-    }
 
-    updateNavBasedOnAuth(); // Llama a la función al cargar la página
+        const authToken = localStorage.getItem('authToken');
+        const userInfo = document.getElementById('userInfo');
+        const loginBtn = document.getElementById('loginBtn');
 
-    // También aplicamos el color de tema guardado, si existe
-    const storedColor = localStorage.getItem('themeColor');
-    if (storedColor) {
-        document.body.style.backgroundColor = storedColor;
-    }
-  </script>
+        function updateNavBasedOnAuth() {
+            if (authToken) {
+                userInfo.textContent = '¡Bienvenido! Sesión iniciada.';
+                loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Cerrar Sesión';
+                loginBtn.href = '#logout';
+                loginBtn.onclick = () => {
+                    localStorage.removeItem('authToken');
+                    window.location.reload();
+                };
+            } else {
+                userInfo.textContent = 'No has iniciado sesión.';
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                loginBtn.href = 'login.html';
+                loginBtn.onclick = null;
+            }
+        }
+
+        updateNavBasedOnAuth();
+
+        const storedColor = localStorage.getItem('themeColor');
+        if (storedColor) {
+            document.body.style.backgroundColor = storedColor;
+        }
+    </script>
 </body>
 </html>
