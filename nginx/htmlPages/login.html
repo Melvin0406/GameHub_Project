@@ -65,6 +65,7 @@
                 const data = await apiService.login(email, password); // ¡Usando la Fachada!
 
                 localStorage.setItem('authToken', data.token);
+                localStorage.setItem('currentUserGameHub', JSON.stringify(data.user));
                 
                 const redirectUrl = localStorage.getItem('loginRedirect');
                 if (redirectUrl) {

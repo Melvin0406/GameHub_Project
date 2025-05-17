@@ -1,138 +1,358 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Perfil de Usuario</title>
-  <script src="js/authGuard.js"></script>
-  <style>
-    /*
-      Muestra información falsa de cada usuario 
-      y enlaces para mandar mensaje privado o correo.
-    */
-    body {
-      margin: 0; 
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-    }
-    header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 1rem;
-      text-decoration: none;
-    }
-    main {
-      text-align: center;
-      padding: 2rem;
-    }
-    .profile-box {
-      background-color: #fff;
-      display: inline-block;
-      padding: 2rem;
-      border-radius: 8px;
-      text-align: left;
-    }
-    .boton {
-      display: inline-block;
-      margin: 1rem 1rem 0 0;
-      padding: 0.8rem 1.2rem;
-      background-color: #007BFF;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-    .boton:hover {
-      background-color: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Mi Perfil - GameHub Local</title>
+    <script src="js/authGuard.js"></script> <script src="js/BaseApiService.js"></script>
+    <script src="js/ApiService.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; }
+        header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
+        nav { background-color: #252525; padding: 0.75rem 0; text-align: center; }
+        nav a { color: #00aaff; margin: 0 1.5rem; text-decoration: none; font-weight: bold; font-size: 1.1em; }
+        nav a:hover, nav a.active { color: #007bff; }
+        main { padding: 2rem; max-width: 900px; margin: 2rem auto; background-color: #252525; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        h1, h2, h3 { color: #00aaff; }
+        .profile-section { margin-bottom: 2rem; }
+        .message-list { list-style: none; padding: 0; }
+        .message-item { background-color: #333; margin-bottom: 0.75rem; padding: 1rem; border-radius: 5px; border-left: 4px solid #007bff; cursor: pointer; transition: background-color 0.2s; }
+        .message-item:hover { background-color: #3f3f3f; }
+        .message-item strong { color: #00ddff; }
+        .message-item .meta { font-size: 0.85em; color: #888; margin-top: 0.5rem; }
+        .message-item.unread { font-weight: bold; border-left-color: #00ff88; }
+        .message-detail { margin-top: 1.5rem; padding: 1.5rem; background-color: #2c2c2c; border-radius: 5px; }
+        .message-detail h3 { margin-top: 0; }
+        .message-detail pre { background-color: #383838; padding: 1rem; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; color: #e0e0e0; }
+        #compose-message-btn { background-color: #007bff; color: white; padding: 0.8rem 1.2rem; border:none; border-radius: 5px; cursor: pointer; font-size: 1em; margin-bottom: 1rem;}
+        #compose-message-btn:hover { background-color: #0056b3;}
+
+        /* Estilos para el modal de Redactar Mensaje (simplificado) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #2c2c2c; margin: 10% auto; padding: 25px; border: 1px solid #555; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
+        .modal-content label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        .modal-content input[type="text"], .modal-content textarea { width: calc(100% - 22px); padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #555; border-radius: 4px; background-color: #383838; color: #e0e0e0; }
+        .modal-content textarea { min-height: 120px; resize: vertical; }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; position: absolute; top: 10px; right: 20px; }
+        .close-btn:hover, .close-btn:focus { color: #fff; text-decoration: none; cursor: pointer; }
+    </style>
 </head>
 <body>
-  <!--
-    Recibe ?user=Usuario
-    Muestra info "falsa" de ese usuario.
-    Luego ofrece enlaces para:
-      - Mandar mensaje privado (messages.html?user=xxxx)
-      - Mandar correo (email.html?to=xxxx)
-  -->
-  <header>
-    <h1>Perfil de Usuario</h1>
-    <nav>
-      <a href="index.html">Inicio</a>
-      <a href="games.html">Juegos</a>
-      <a href="startStream.html">Iniciar Stream</a>
-      <a href="messages.html">Mensajes Privados</a>
-      <a href="email.html">Enviar Correo</a>
-      <a href="config.html">Configuración</a>
-    </nav>
-  </header>
+    <header>
+        <h1 id="profile-title">Mi Perfil</h1>
+        <nav id="main-nav">
+            </nav>
+    </header>
 
-  <main>
-    <div class="profile-box">
-      <h2 id="userName"></h2>
-      <p id="userDescription"></p>
-      <a class="boton" id="privateMsgLink" href="#">Enviar Mensaje Privado</a>
-      <a class="boton" id="emailLink" href="#">Enviar Correo</a>
+    <main>
+        <div class="profile-section" id="user-details">
+            <h2>Detalles del Usuario</h2>
+            <p><strong>Nombre de Usuario:</strong> <span id="username-display">Cargando...</span></p>
+            <p><strong>Email:</strong> <span id="email-display">Cargando...</span></p>
+        </div>
+
+        <div class="profile-section">
+            <h2>Mensajes Recibidos (Bandeja de Entrada)</h2>
+            <button id="compose-message-btn">Redactar Nuevo Mensaje</button>
+            <ul id="inbox-list" class="message-list">
+                </ul>
+            <div id="message-detail-view" class.message-detail" style="display:none;">
+                <h3>Detalle del Mensaje</h3>
+                <p><strong>De:</strong> <span id="detail-sender"></span></p>
+                <p><strong>Asunto:</strong> <span id="detail-subject"></span></p>
+                <p><strong>Fecha:</strong> <span id="detail-date"></span></p>
+                <hr>
+                <pre id="detail-body"></pre>
+                <button id="back-to-inbox-btn">Volver a Bandeja de Entrada</button>
+            </div>
+        </div>
+        
+        </main>
+
+    <div id="composeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeComposeModal">&times;</span>
+            <h2>Redactar Nuevo Mensaje Interno</h2>
+            <form id="sendMessageForm">
+                <div>
+                    <label for="recipientInput">Destinatario (Nombre de Usuario o Email):</label>
+                    <input type="text" id="recipientInput" name="recipientIdentifier" placeholder="Ej: userB o userb@local.game" required>
+                </div>
+                <div>
+                    <label for="messageSubject">Asunto:</label>
+                    <input type="text" id="messageSubject" name="subject" required>
+                </div>
+                <div>
+                    <label for="messageBody">Mensaje:</label>
+                    <textarea id="messageBody" name="body" required></textarea>
+                </div>
+                <button type="submit" class="mod-actions button">Enviar Mensaje</button>
+            </form>
+            <div id="composeStatusMessage" class="status-message" style="display:none;"></div>
+        </div>
     </div>
-  </main>
 
-  <script>
-    // Datos falsos para cada usuario
-    // NOTA: Podrías guardar esto en un "falso backend" o JSON. 
-    const fakeUsers = {
-      "Rafael": {
-        description: "Aficionado a Zelda, Smash Bros y Mario Kart. '¡Los juegos de Nintendo me encantan!'"
-      },
-      "Kevin": {
-        description: "Apasionado de la programación. Tips de Smash Bros y desarrollo web."
-      },
-      "Guillermo": {
-        description: "Fan de Dragon Ball y consejos de matemáticas. También juega Smash Bros."
-      },
-      "Alice": {
-        description: "Mensaje automático 1 (usuario genérico)."
-      },
-      "Bob": {
-        description: "Mensaje automático 2 (usuario genérico)."
-      },
-      "Carlos": {
-        description: "Usuario ficticio. Crea streaming de prueba."
-      },
-      "Diana": {
-        description: "Usuario ficticio. Comparte mensajes en vivo."
-      }
-    };
+    <footer>
+        <p>&copy; 2025 GameHub Local</p>
+    </footer>
 
-    // Obtenemos el "user" de la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const userParam = urlParams.get('user');
+    <script>
+        // Asumimos que apiService (y authGuard.js si lo usas) ya están incluidos
+        // const apiService = new ApiService(); // Si no es global
 
-    const userNameEl = document.getElementById('userName');
-    const userDescEl = document.getElementById('userDescription');
-    const privateMsgLink = document.getElementById('privateMsgLink');
-    const emailLink = document.getElementById('emailLink');
+        const mainNav = document.getElementById('main-nav');
+        const usernameDisplay = document.getElementById('username-display');
+        const emailDisplay = document.getElementById('email-display');
+        const profileTitle = document.getElementById('profile-title');
+        const inboxList = document.getElementById('inbox-list');
+        const messageDetailView = document.getElementById('message-detail-view');
+        const detailSender = document.getElementById('detail-sender');
+        const detailSubject = document.getElementById('detail-subject');
+        const detailDate = document.getElementById('detail-date');
+        const detailBody = document.getElementById('detail-body');
+        const backToInboxBtn = document.getElementById('back-to-inbox-btn');
 
-    if (userParam && fakeUsers[userParam]) {
-      userNameEl.textContent = userParam;
-      userDescEl.textContent = fakeUsers[userParam].description;
-    } else {
-      userNameEl.textContent = "Usuario Desconocido";
-      userDescEl.textContent = "No existe información para este usuario.";
-    }
+        const composeMessageBtn = document.getElementById('compose-message-btn');
+        const composeModal = document.getElementById('composeModal');
+        const closeComposeModalBtn = document.getElementById('closeComposeModal');
+        const sendMessageForm = document.getElementById('sendMessageForm');
+        const composeStatusMessage = document.getElementById('composeStatusMessage');
 
-    // Creamos los enlaces para mandar mensaje y correo (falsos)
-    privateMsgLink.href = `messages.html?user=${encodeURIComponent(userParam)}`;
-    emailLink.href = `email.html?to=${encodeURIComponent(userParam)}`;
 
-    // Aplicar color de tema
-    const storedColor = localStorage.getItem('themeColor');
-    if (storedColor) {
-      document.body.style.backgroundColor = storedColor;
-    }
-  </script>
+        let currentUser = null; // Para almacenar datos del usuario logueado
+
+        // ---- Autenticación y UI Nav ----
+        function updateNavForAuth() {
+            // ... (código similar al de games.html para la nav, adaptado a los enlaces de profile.html)
+            const authToken = localStorage.getItem('authToken');
+            let navLinks = '<a href="index.html">Inicio</a> <a href="games.html">Juegos y Mods</a>';
+            if (authToken) {
+                navLinks += ` <a href="profile.html" class="active">Mi Perfil</a>`;
+                navLinks += ` <a href="email.html">Enviar Correo Ext.</a>`; 
+                navLinks += ` <a href="#" id="logout-btn-profile">Cerrar Sesión</a>`;
+            } else {
+                // authGuard.js ya debería haber redirigido si esta página es protegida
+                navLinks += ` <a href="login.html">Login</a>`;
+            }
+            mainNav.innerHTML = navLinks;
+
+            if (authToken) {
+                const logoutBtn = document.getElementById('logout-btn-profile');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUserGameHub'); // Limpiar datos de usuario
+                        window.location.href = 'login.html';
+                    });
+                }
+            }
+        }
+
+        // ---- Cargar Datos del Perfil y Mensajes ----
+        async function loadProfileData() {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) { 
+                // authGuard.js ya debería haber actuado. Como fallback:
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // Primero, obtenemos los datos del usuario actual.
+                // Necesitamos un endpoint /api/auth/me o decodificar el token (menos seguro para obtener datos actualizados)
+                // Asumamos que guardamos el usuario en localStorage durante el login por simplicidad aquí.
+                // ESTO ES UNA SIMPLIFICACIÓN. Idealmente, fetch /api/auth/me
+                const storedUser = JSON.parse(localStorage.getItem('currentUserGameHub')); 
+                if (storedUser) {
+                    currentUser = storedUser;
+                    usernameDisplay.textContent = currentUser.username;
+                    emailDisplay.textContent = currentUser.email;
+                    profileTitle.textContent = `Perfil de ${currentUser.username}`;
+                } else {
+                    // Si no está, podría ser un token viejo o algo falló.
+                    // Forzar logout o intentar fetch /api/auth/me
+                    console.warn("Datos del usuario no encontrados en localStorage, intentando /api/auth/me");
+                    try {
+                        // Necesitarías crear este método en ApiService y el endpoint en backend
+                        // const meData = await apiService.getMe(); // Asume que getMe usa el token guardado
+                        // currentUser = meData.user;
+                        // localStorage.setItem('currentUserGameHub', JSON.stringify(currentUser));
+                        // usernameDisplay.textContent = currentUser.username;
+                        // emailDisplay.textContent = currentUser.email;
+                        // profileTitle.textContent = `Perfil de ${currentUser.username}`;
+                        throw new Error("Endpoint /api/auth/me no implementado para este ejemplo, usando datos simulados.");
+                    } catch (meError) {
+                        console.error("Error obteniendo datos del usuario, cerrando sesión:", meError);
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUserGameHub');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                }
+                
+                // Cargar bandeja de entrada
+                loadInbox();
+
+            } catch (error) {
+                console.error("Error cargando datos del perfil:", error);
+                usernameDisplay.textContent = "Error";
+                emailDisplay.textContent = "Error";
+                // Manejar error, quizás redirigir a login si es un problema de token
+                if (error.requiresLogin || error.status === 401) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUserGameHub');
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+        
+        async function loadInbox() {
+            inboxList.innerHTML = '<li>Cargando mensajes...</li>';
+            messageDetailView.style.display = 'none';
+            try {
+                // Asumimos que ApiService tendrá un método getInbox que usa el token
+                // const messages = await apiService.getInbox(); // Necesitas crear este método en ApiService
+                const messages = await apiService.getInternalInbox();
+
+
+                inboxList.innerHTML = ''; // Limpiar
+                if (messages.length === 0) {
+                    inboxList.innerHTML = '<li>No tienes mensajes en tu bandeja de entrada.</li>';
+                    return;
+                }
+                messages.forEach(msg => {
+                    const item = document.createElement('li');
+                    item.className = 'message-item';
+                    if (!msg.is_read) {
+                        item.classList.add('unread');
+                    }
+                    item.innerHTML = `
+                        <div>
+                            <strong>De:</strong> ${msg.sender_username}<br>
+                            <strong>Asunto:</strong> ${msg.subject}
+                        </div>
+                        <div class="meta">${new Date(msg.sent_at).toLocaleString()}</div>
+                    `;
+                    item.addEventListener('click', () => showMessageDetail(msg.id));
+                    inboxList.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Error cargando bandeja de entrada:", error);
+                inboxList.innerHTML = `<li style="color:red;">Error al cargar mensajes: ${error.message}</li>`;
+            }
+        }
+
+        async function showMessageDetail(messageId) {
+            inboxList.style.display = 'none'; // Ocultar lista
+            messageDetailView.style.display = 'block';
+            // Limpiar campos de detalle
+            detailSender.textContent = 'Cargando...';
+            detailSubject.textContent = '';
+            detailDate.textContent = '';
+            detailBody.textContent = '';
+
+            try {
+                // const message = await apiService.getMessageById(messageId); // Necesitas crear este método
+                const message = await apiService.getInternalMessageById(messageId);
+
+                detailSender.textContent = message.sender_username;
+                detailSubject.textContent = message.subject;
+                detailDate.textContent = new Date(message.sent_at).toLocaleString();
+                detailBody.textContent = message.body;
+
+                // Si el mensaje se marcó como leído en el backend, la próxima vez que se cargue la bandeja de entrada se reflejará.
+                // Opcional: Actualizar visualmente el estado de 'unread' en la lista si aún está visible o al volver.
+                const listItem = Array.from(inboxList.children).find(li => li.innerHTML.includes(message.subject) && li.innerHTML.includes(message.sender_username));
+                if(listItem && listItem.classList.contains('unread')){
+                    listItem.classList.remove('unread');
+                    // Podrías añadir una pequeña animación o cambio visual
+                }
+
+            } catch (error) {
+                console.error("Error cargando detalle del mensaje:", error);
+                detailBody.textContent = `Error al cargar el mensaje: ${error.message}`;
+            }
+        }
+
+        backToInboxBtn.addEventListener('click', () => {
+            messageDetailView.style.display = 'none';
+            inboxList.style.display = 'block';
+            // Opcional: recargar la bandeja de entrada para reflejar el estado de "leído"
+            // loadInbox();
+        });
+
+        // ---- Lógica del Modal de Redacción ----
+        composeMessageBtn.addEventListener('click', () => {
+            if (!currentUser) { // Asegurarse que tenemos datos del usuario actual
+                alert("No se pudieron cargar tus datos de usuario. Intenta iniciar sesión de nuevo.");
+                return;
+            }
+            sendMessageForm.reset();
+            composeStatusMessage.style.display = 'none';
+            composeModal.style.display = 'block';
+        });
+
+        closeComposeModalBtn.onclick = function() {
+            composeModal.style.display = "none";
+        }
+        window.onclick = function(event) { // Cerrar si se hace clic fuera del modal
+            if (event.target == composeModal) {
+                composeModal.style.display = "none";
+            }
+        }
+
+        sendMessageForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const recipientUsername = document.getElementById('recipientUsername').value;
+            const subject = document.getElementById('messageSubject').value;
+            const body = document.getElementById('messageBody').value;
+
+            composeStatusMessage.style.display = 'none';
+            composeStatusMessage.className = 'status-message';
+
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando...';
+
+            try {
+                // const data = await apiService.sendInternalMessage(recipientUsername, subject, body); // Necesitas crear este método
+                const data = await apiService.sendInternalMessage(recipientUsername, subject, body);
+
+                composeStatusMessage.textContent = data.message || "Mensaje enviado exitosamente.";
+                composeStatusMessage.classList.add('status-success'); // Asume CSS .status-success
+                this.reset();
+                setTimeout(() => {
+                    composeModal.style.display = "none";
+                    // Opcional: recargar bandeja de enviados o mostrar notificación
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error enviando mensaje interno:", error);
+                composeStatusMessage.textContent = error.message || "Error al enviar el mensaje.";
+                composeStatusMessage.classList.add('status-error'); // Asume CSS .status-error
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                composeStatusMessage.style.display = 'block';
+            }
+        });
+
+
+        // ---- Inicialización ----
+        document.addEventListener('DOMContentLoaded', () => {
+            updateNavForAuth();
+            loadProfileData(); // Esto cargará los datos del usuario y luego la bandeja de entrada
+
+            // Código para `authGuard.js` (si no lo tienes en un archivo separado)
+            // Este es un ejemplo, el tuyo podría ser diferente
+            const tokenForGuard = localStorage.getItem('authToken');
+            if (!tokenForGuard && window.location.pathname.endsWith('profile.html')) { // Solo si estamos en profile.html y no hay token
+                alert('Acceso denegado. Por favor, inicia sesión.');
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+            }
+        });
+
+    </script>
 </body>
 </html>
