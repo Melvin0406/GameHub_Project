@@ -18,7 +18,6 @@ class BaseApiService {
             const token = localStorage.getItem('authToken');
             if (!token) {
                 console.error('BaseApiService: Token de autenticación no encontrado para ruta protegida.');
-                // Podrías manejar la redirección al login aquí globalmente o lanzar un error específico.
                 const authError = new Error('Autenticación requerida. Por favor, inicia sesión.');
                 authError.requiresLogin = true;
                 throw authError;
@@ -37,7 +36,7 @@ class BaseApiService {
 
         try {
             const response = await fetch(url, config);
-            const data = await response.json(); // Intenta parsear JSON siempre
+            const data = await response.json();
 
             if (!response.ok) {
                 const errorMessage = data.message || `Error HTTP ${response.status} al acceder a ${url}`;
@@ -48,9 +47,9 @@ class BaseApiService {
             }
             return data;
         } catch (error) {
-            if (error.status || error.requiresLogin) { // Si ya es un error estructurado por nosotros
+            if (error.status || error.requiresLogin) {
                 throw error;
-            } else { // Error de red o de parseo de fetch
+            } else {
                 console.error(`BaseApiService: Error de red o parseo para ${method} ${url}:`, error);
                 const networkError = new Error('Error de comunicación con el servidor. Intenta de nuevo más tarde.');
                 networkError.isNetworkError = true;
@@ -61,11 +60,11 @@ class BaseApiService {
 
     async _uploadRequest(endpoint, formData, requiresAuth = true) {
         const url = `${this.baseUrl}${endpoint}`;
-        const headers = {}; // NO Content-Type para FormData, el navegador lo pone
+        const headers = {};
     
         if (requiresAuth) {
             const token = localStorage.getItem('authToken');
-            if (!token) { /* ... manejo de error de token ... */ throw new Error('Autenticación requerida.'); }
+            if (!token) { throw new Error('Autenticación requerida.'); }
             headers['Authorization'] = `Bearer ${token}`;
         }
     
@@ -78,13 +77,12 @@ class BaseApiService {
         try {
             const response = await fetch(url, config);
             const data = await response.json();
-            if (!response.ok) { /* ... manejo de error ... */ throw new Error(data.message || 'Error en subida'); }
+            if (!response.ok) { throw new Error(data.message || 'Error en subida'); }
             return data;
-        } catch (error) { /* ... manejo de error ... */ throw error; }
+        } catch (error) { throw error; }
     }
 
-    // Métodos "abstractos" que las subclases DEBEN implementar.
-    // Representan la "interfaz" que la fachada debe cumplir.
+    // Métodos "abstractos" que las subclases deben implementar.
     async login(email, password) {
         throw new Error("Método 'login' debe ser implementado por la subclase.");
     }
