@@ -45,4 +45,28 @@ exports.createUser = (username, email, passwordHash) => {
     });
 };
 
+exports.findUserById = (id) => { // Necesario para el endpoint /me
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT id, username, email, profile_image_url FROM users WHERE id = ?";
+        db.get(sql, [id], (err, row) => {
+            if (err) reject(new Error("Error fetching user by ID."));
+            else resolve(row);
+        });
+    });
+};
+
+exports.updateProfileImageUrl = (userId, imageUrl) => {
+    return new Promise((resolve, reject) => {
+        const sql = "UPDATE users SET profile_image_url = ? WHERE id = ?";
+        db.run(sql, [imageUrl, userId], function(err) {
+            if (err) {
+                console.error("Error in userRepository.updateProfileImageUrl:", err.message);
+                reject(new Error("Error updating profile image URL in database."));
+            } else {
+                resolve({ changes: this.changes });
+            }
+        });
+    });
+};
+
 // Podrías añadir más funciones: findUserById, updateUser, deleteUser, etc.

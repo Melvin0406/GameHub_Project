@@ -59,9 +59,16 @@ class ApiService extends BaseApiService {
         // Asumiendo que el backend espera un PUT para el borrado suave
         return this._request(`/internal-mail/${messageId}/delete`, 'PUT', null, true);
     }
+
+    async getMyProfile() {
+        return this._request('/users/me', 'GET', null, true);
+    }
+
+    async uploadProfilePicture(formData) {
+        // Usaremos el _uploadRequest que maneja FormData sin 'Content-Type: application/json'
+        return this._uploadRequest('/users/me/profile-picture', formData, true);
+    }
 }
 
 // Crear una instancia global de la fachada para que sea fácil de usar en otras partes del frontend.
 const apiService = new ApiService();
-
-// Si usaras módulos ES6: export default apiService; o export const apiService = new ApiService();

@@ -28,7 +28,7 @@ Thumbs.db
 # Otros archivos temporales o de caché
 *.cache
 
-
 # Archivos de configuración de FTP
 ftp_storage/
 backend/uploads/
+backend/public/
