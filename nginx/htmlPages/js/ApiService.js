@@ -1,13 +1,8 @@
 // C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\ApiService.js
-// Este archivo DEBE incluirse DESPUÉS de BaseApiService.js en tu HTML
-
 class ApiService extends BaseApiService {
     constructor(baseUrl = '/api') {
         super(baseUrl); // Llama al constructor de la clase BaseApiService
     }
-
-    // Implementación de los métodos "abstractos"
-    // Cada uno de estos métodos es una operación simplificada de la fachada.
 
     async login(email, password) {
         // Usa el método _request heredado de BaseApiService
@@ -24,11 +19,11 @@ class ApiService extends BaseApiService {
 
     // Nuevos métodos para juegos y mods
     async getAllGames() {
-        return this._request('/games', 'GET', null, false); // No requiere autenticación para listar juegos
+        return this._request('/games', 'GET', null, false);
     }
 
     async getGameDetails(gameId) {
-        return this._request(`/games/${gameId}`, 'GET', null, false); // No requiere autenticación para ver detalles/mods
+        return this._request(`/games/${gameId}`, 'GET', null, false);
     }
 
     async uploadMod(gameId, formData) {
@@ -52,7 +47,6 @@ class ApiService extends BaseApiService {
     }
 
     async deleteInternalMessage(messageId) {
-        // Asumiendo que el backend espera un PUT para el borrado suave
         return this._request(`/internal-mail/${messageId}/delete`, 'PUT', null, true);
     }
 
@@ -61,16 +55,14 @@ class ApiService extends BaseApiService {
     }
 
     async uploadProfilePicture(formData) {
-        // Usaremos el _uploadRequest que maneja FormData sin 'Content-Type: application/json'
         return this._uploadRequest('/users/me/profile-picture', formData, true);
     }
 
     async deleteMod(modId) {
-        // El método _request ya maneja el token si requiresAuth es true
         return this._request(`/games/mods/${modId}`, 'DELETE', null, true); 
     }
 
-    async updateModDetails(modId, modData) { // modData será un objeto { name, description, version }
+    async updateModDetails(modId, modData) {
         return this._request(`/games/mods/${modId}`, 'PUT', modData, true);
     }
 
@@ -78,7 +70,6 @@ class ApiService extends BaseApiService {
         return this._request(`/friends/search-users?q=${encodeURIComponent(searchTerm)}`, 'GET', null, true);
     }
 
-    // (Podrías añadir aquí los otros métodos para amigos que faltan, como sendFriendRequest, acceptFriendRequest, etc.)
     async sendFriendRequest(username) {
         return this._request(`/friends/request/${username}`, 'POST', null, true);
     }
@@ -100,5 +91,5 @@ class ApiService extends BaseApiService {
     }
 }
 
-// Crear una instancia global de la fachada para que sea fácil de usar en otras partes del frontend.
+// Instancia global
 const apiService = new ApiService();
