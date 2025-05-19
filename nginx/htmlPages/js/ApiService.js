@@ -69,6 +69,10 @@ class ApiService extends BaseApiService {
         // El método _request ya maneja el token si requiresAuth es true
         return this._request(`/games/mods/${modId}`, 'DELETE', null, true); 
     }
+
+    async updateModDetails(modId, modData) { // modData será un objeto { name, description, version }
+        return this._request(`/games/mods/${modId}`, 'PUT', modData, true);
+    }
 }
 
 // Crear una instancia global de la fachada para que sea fácil de usar en otras partes del frontend.

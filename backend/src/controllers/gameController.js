@@ -103,3 +103,23 @@ exports.deleteMod = async (req, res, next) => {
         next(error); // Pasa al manejador de errores global
     }
 };
+
+exports.updateModDetails = async (req, res, next) => {
+    try {
+        const modId = parseInt(req.params.modId, 10);
+        const requestingUserId = req.user.id; // De authMiddleware
+        const { name, description, version } = req.body;
+
+        if (isNaN(modId)) {
+            return res.status(400).json({ message: "Invalid Mod ID." });
+        }
+        if (!name) { // El nombre es usualmente el campo más importante a validar aquí
+            return res.status(400).json({ message: "Mod name is required." });
+        }
+
+        const result = await gameService.updateUserModDetails(modId, requestingUserId, { name, description, version });
+        res.json(result);
+    } catch (error) {
+        next(error); // Pasa al manejador de errores global
+    }
+};
