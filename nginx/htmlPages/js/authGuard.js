@@ -1,17 +1,17 @@
-// authGuard.js
-(function() { // Usamos una IIFE (Immediately Invoked Function Expression) para no contaminar el scope global
+// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\authGuard.js
+(function() {
     const authToken = localStorage.getItem('authToken');
+    const currentPage = window.location.pathname.split('/').pop().toLowerCase();
+    const publicPages = ['login.html', 'signup.html']; // Páginas que NO requieren autenticación
 
-    // Lista de páginas que NO requieren login o son las páginas de autenticación mismas
-    const publicPages = ['login.html', 'signup.html'];
-    const currentPage = window.location.pathname.split('/').pop(); // Obtiene el nombre del archivo actual
-
+    // Si NO hay token Y la página actual NO es una página pública
     if (!authToken && !publicPages.includes(currentPage)) {
-        // Guardar la página actual para redirigir después del login (opcional)
-        const redirectTo = window.location.pathname + window.location.search;
-        localStorage.setItem('loginRedirect', redirectTo); // Guardamos a dónde quería ir
-
-        // Redirigir a login.html
-        window.location.href = 'login.html';
+        console.log(`AuthGuard: No token found on protected page (${currentPage}). Redirecting to login.`);
+        
+        // Guardar la URL a la que se intentaba acceder para redirigir después del login
+        const intendedDestination = window.location.pathname + window.location.search;
+        localStorage.setItem('loginRedirect', intendedDestination);
+        
+        window.location.href = 'login.html'; // Asegúrate que login.html esté en la misma ruta relativa
     }
 })();

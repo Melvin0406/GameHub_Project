@@ -6,8 +6,9 @@ const path = require('path'); // Asegúrate que esté importado
 
 const authRoutes = require('./src/routes/authRoutes');
 const emailRoutes = require('./src/routes/emailRoutes');
-const gameRoutes = require('./src/routes/gameRoutes'); // <--- NUEVA RUTA
+const gameRoutes = require('./src/routes/gameRoutes');
 const internalMailRoutes = require('./src/routes/internalMailRoutes');
+const userRoutes = require('./src/routes/userRoutes');
 
 require('./src/config/database'); // Inicializa la conexión y crea tablas
 
@@ -16,6 +17,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Servir archivos estáticos de la carpeta de uploads (si decides servir avatares, etc. desde aquí)
 // No es necesario para los mods si se descargan vía FTP directamente.
@@ -26,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/internal-mail', internalMailRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡El backend de GameHub está funcionando!');
