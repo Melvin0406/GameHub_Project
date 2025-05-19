@@ -87,3 +87,19 @@ exports.downloadModFile = async (req, res, next) => {
         next(error); // Pasa al manejador de errores global
     }
 };
+
+exports.deleteMod = async (req, res, next) => {
+    try {
+        const modId = parseInt(req.params.modId, 10);
+        const requestingUserId = req.user.id; // De authMiddleware
+
+        if (isNaN(modId)) {
+            return res.status(400).json({ message: "Invalid Mod ID." });
+        }
+
+        const result = await gameService.deleteUserMod(modId, requestingUserId);
+        res.json(result);
+    } catch (error) {
+        next(error); // Pasa al manejador de errores global
+    }
+};
