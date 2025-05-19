@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat & Friends - GameHub Local</title>
+    <script src="js/authGuard.js"></script>
+    <script src="js/BaseApiService.js"></script>
+    <script src="js/ApiService.js"></script>
+    <script src="js/navigation.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; }
+        header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
+        header h1#page-main-title { margin: 0; font-size: 2.5em; }
+        nav#main-navigation-bar { background-color: #252525; padding: 0.85rem 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        nav#main-navigation-bar a { color: #00aaff; margin: 0 1.2rem; text-decoration: none; font-weight: bold; font-size: 1.1em; transition: color 0.3s, text-shadow 0.3s; padding: 0.5rem 0; }
+        nav#main-navigation-bar a:hover, 
+        nav#main-navigation-bar a.active { color: #007bff; text-shadow: 0 0 5px rgba(0,123,255,0.7); }
+        nav#main-navigation-bar a#logout-link { color: #ff6b6b; }
+        nav#main-navigation-bar a#logout-link:hover { color: #ff8080; }
+
+        main { display: flex; max-width: 1400px; margin: 1rem auto; gap: 1.5rem; padding: 1rem; }
+
+        .sidebar { flex: 0 0 300px; background-color: #252525; padding: 1.5rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); height: calc(100vh - 150px); display: flex; flex-direction: column; }
+        .chat-main-area { flex-grow: 1; background-color: #252525; padding: 1.5rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); height: calc(100vh - 150px); display: flex; flex-direction: column; }
+        
+        .sidebar h2, .chat-main-area h2 { color: #00aaff; margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 0.75rem; }
+        .sidebar .section { margin-bottom: 1.5rem; }
+        
+        .user-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+        .user-list li { display: flex; align-items: center; padding: 0.75rem; margin-bottom: 0.5rem; background-color: #333; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+        .user-list li:hover { background-color: #3f3f3f; }
+        .user-list img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; background-color: #444; }
+        .user-list .username { font-weight: bold; color: #00ddff; }
+        .user-list .action-btn { margin-left: auto; padding: 0.3rem 0.6rem; font-size: 0.8em; }
+
+        #search-users-section input[type="text"] { width: calc(100% - 70px); padding: 0.6rem; background-color: #383838; border: 1px solid #555; color: #e0e0e0; border-radius: 4px; }
+        #search-users-section button { padding: 0.6rem 0.8rem; background-color: #007bff; color:white; border:none; border-radius: 4px; margin-left: 5px; }
+        
+        .chat-window { flex-grow: 1; border: 1px solid #333; border-radius: 5px; margin-top: 1rem; display: flex; flex-direction: column; background-color: #1e1e1e; }
+        .chat-header { padding: 0.75rem; background-color: #333; border-bottom: 1px solid #444; font-weight: bold; }
+        .messages-display { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column-reverse; } /* column-reverse for new messages at bottom */
+        .message { margin-bottom: 0.75rem; padding: 0.6rem 1rem; border-radius: 15px; max-width: 70%; word-wrap: break-word; }
+        .message.sent { background-color: #007bff; color: white; align-self: flex-end; border-bottom-right-radius: 5px;}
+        .message.received { background-color: #3a3a3a; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 5px;}
+        .message .timestamp { font-size: 0.7em; color: #ccc; display: block; margin-top: 3px; text-align: right; }
+        .message.received .timestamp { color: #888; }
+        
+        .message-input-area { display: flex; padding: 0.75rem; border-top: 1px solid #333; background-color: #2c2c2c;}
+        .message-input-area textarea { flex-grow: 1; padding: 0.6rem; border: 1px solid #555; border-radius: 5px; background-color: #383838; color: #e0e0e0; resize: none; margin-right: 0.5rem; }
+        .message-input-area button { padding: 0.6rem 1rem; background-color: #007bff; color:white; border:none; border-radius: 5px; }
+        
+        .status-message { margin-top:0.5rem; padding:0.5rem; border-radius:4px; font-size:0.9em; }
+        .status-success { background-color:#28a745; color:white; }
+        .status-error { background-color:#dc3545; color:white; }
+
+        .action-button { background-color: #007bff; color: white; padding: 0.4rem 0.8rem; border:none; border-radius: 5px; cursor: pointer; font-size: 0.9em; margin-left: auto;}
+        .action-button:hover { background-color: #0056b3;}
+        .decline-button { background-color: #dc3545; }
+        .decline-button:hover { background-color: #c82333; }
+
+        .placeholder-text { text-align: center; color: #777; margin-top: 2rem; font-style: italic; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="page-main-title">Chat & Friends</h1>
+        <nav id="main-navigation-bar">
+            </nav>
+    </header>
+
+    <main>
+        <aside class="sidebar">
+            <div class="section" id="search-users-section">
+                <h2>Find Users</h2>
+                <input type="text" id="searchInput" placeholder="Search by username...">
+                <button id="searchButton">Search</button>
+                <ul id="searchResultsList" class="user-list" style="margin-top:1rem;"></ul>
+                <div id="searchStatus" class="status-message" style="display:none;"></div>
+            </div>
+
+            <div class="section" id="pending-requests-section">
+                <h2>Pending Friend Requests</h2>
+                <ul id="pendingRequestsList" class="user-list">
+                    </ul>
+            </div>
+            
+            <div class="section" id="friends-list-section">
+                <h2>My Friends</h2>
+                <ul id="friendsList" class="user-list">
+                    </ul>
+            </div>
+        </aside>
+
+        <section class="chat-main-area">
+            <h2 id="chat-with-title">Select a Friend to Chat</h2>
+            <div class="chat-window">
+                <div class="messages-display" id="messagesDisplay">
+                    <p class="placeholder-text">No conversation selected, or no messages yet.</p>
+                    </div>
+                <div class="message-input-area" id="messageInputArea" style="display:none;">
+                    <textarea id="messageInput" placeholder="Type your message..."></textarea>
+                    <button id="sendMessageButton">Send</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // apiService instance should be globally available
+
+        // Sidebar elements
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchResultsList = document.getElementById('searchResultsList');
+        const searchStatus = document.getElementById('searchStatus');
+        const pendingRequestsList = document.getElementById('pendingRequestsList');
+        const friendsList = document.getElementById('friendsList');
+
+        // Chat area elements
+        const chatWithTitle = document.getElementById('chat-with-title');
+        const messagesDisplay = document.getElementById('messagesDisplay');
+        const messageInputArea = document.getElementById('messageInputArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageButton = document.getElementById('sendMessageButton');
+
+        let currentChatFriendId = null;
+        let currentChatFriendUsername = null;
+        let globalCurrentUserData = null; // Store fetched user data
+
+        // ---- Helper to display status messages ----
+        function displaySearchStatus(message, type = 'info') {
+            searchStatus.textContent = message;
+            searchStatus.className = 'status-message'; // Reset
+            if (type === 'success') searchStatus.classList.add('status-success');
+            else if (type === 'error') searchStatus.classList.add('status-error');
+            searchStatus.style.display = 'block';
+            setTimeout(() => searchStatus.style.display = 'none', 3000);
+        }
+        
+        // ---- User Search ----
+        async function performUserSearch() {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length < 2) {
+                displaySearchStatus("Please enter at least 2 characters to search.", "error");
+                return;
+            }
+            searchResultsList.innerHTML = '<li>Loading...</li>';
+            try {
+                const users = await apiService.searchUsers(searchTerm);
+                searchResultsList.innerHTML = '';
+                if (users.length === 0) {
+                    searchResultsList.innerHTML = '<li>No users found.</li>';
+                } else {
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <img src="${user.profile_image_url || 'images/default_avatar.png'}" alt="${user.username}">
+                            <span class="username">${user.username}</span>
+                            <button class="action-button add-friend-btn" data-username="${user.username}">Add Friend</button>
+                        `;
+                        searchResultsList.appendChild(li);
+                    });
+                    addEventListenersToSearchResults();
+                }
+            } catch (error) {
+                console.error("Error searching users:", error);
+                searchResultsList.innerHTML = '<li>Error searching users.</li>';
+                displaySearchStatus(error.message || "Error during search.", "error");
+            }
+        }
+        searchButton.addEventListener('click', performUserSearch);
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performUserSearch(); });
+
+        function addEventListenersToSearchResults() {
+            searchResultsList.querySelectorAll('.add-friend-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const usernameToAdd = e.target.dataset.username;
+                    try {
+                        const result = await apiService.sendFriendRequest(usernameToAdd);
+                        displaySearchStatus(result.message || `Friend request sent to ${usernameToAdd}.`, "success");
+                        // Optionally refresh pending or friends list if needed, or disable button
+                        e.target.disabled = true;
+                        e.target.textContent = 'Requested';
+                        loadPendingRequests(); // Refresh lists
+                        loadFriends();
+                    } catch (error) {
+                        console.error("Error sending friend request:", error);
+                        displaySearchStatus(error.message || "Failed to send request.", "error");
+                    }
+                });
+            });
+        }
+
+        // ---- Pending Friend Requests ----
+        async function loadPendingRequests() {
+            pendingRequestsList.innerHTML = '<li>Loading...</li>';
+            try {
+                const requests = await apiService.getPendingFriendRequests();
+                pendingRequestsList.innerHTML = '';
+                if (requests.length === 0) {
+                    pendingRequestsList.innerHTML = '<li>No pending requests.</li>';
+                } else {
+                    requests.forEach(req => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <img src="${req.requester_profile_image_url || 'images/default_avatar.png'}" alt="${req.requester_username}">
+                            <span class="username">${req.requester_username}</span>
+                            <button class="action-button accept-request-btn" data-requester-id="${req.requester_id}">Accept</button>
+                            <button class="action-button decline-button decline-request-btn" data-requester-id="${req.requester_id}">Decline</button>
+                        `;
+                        pendingRequestsList.appendChild(li);
+                    });
+                    addEventListenersToPendingRequests();
+                }
+            } catch (error) {
+                console.error("Error loading pending requests:", error);
+                pendingRequestsList.innerHTML = '<li>Error loading requests.</li>';
+            }
+        }
+
+        function addEventListenersToPendingRequests() {
+            pendingRequestsList.querySelectorAll('.accept-request-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const requesterId = e.target.dataset.requesterId;
+                    try {
+                        await apiService.acceptFriendRequest(requesterId);
+                        alert("Friend request accepted!");
+                        loadPendingRequests();
+                        loadFriends();
+                    } catch (error) {
+                        console.error("Error accepting request:", error);
+                        alert(error.message || "Failed to accept request.");
+                    }
+                });
+            });
+            pendingRequestsList.querySelectorAll('.decline-request-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const requesterId = e.target.dataset.requesterId;
+                    if (confirm("Are you sure you want to decline this friend request?")) {
+                        try {
+                            await apiService.declineOrRemoveFriend(requesterId);
+                            alert("Friend request declined.");
+                            loadPendingRequests();
+                        } catch (error) {
+                            console.error("Error declining request:", error);
+                            alert(error.message || "Failed to decline request.");
+                        }
+                    }
+                });
+            });
+        }
+
+        // ---- Friends List ----
+        async function loadFriends() {
+            friendsList.innerHTML = '<li>Loading...</li>';
+            try {
+                const friends = await apiService.getFriends();
+                friendsList.innerHTML = '';
+                if (friends.length === 0) {
+                    friendsList.innerHTML = '<li>You have no friends yet.</li>';
+                } else {
+                    friends.forEach(friend => {
+                        const li = document.createElement('li');
+                        li.dataset.friendId = friend.friend_id;
+                        li.dataset.friendUsername = friend.friend_username;
+                        li.innerHTML = `
+                            <img src="${friend.friend_profile_image_url || 'images/default_avatar.png'}" alt="${friend.friend_username}">
+                            <span class="username">${friend.friend_username}</span>
+                            <button class="action-button unfriend-btn" data-friend-id="${friend.friend_id}">Unfriend</button>
+                        `;
+                        li.addEventListener('click', (e) => { // Click on the li item to start chat
+                            if(e.target.classList.contains('unfriend-btn')) return; // Don't start chat if unfriend is clicked
+                            startChatWithFriend(friend.friend_id, friend.friend_username);
+                        });
+                        friendsList.appendChild(li);
+                    });
+                    addEventListenersToFriendsList();
+                }
+            } catch (error) {
+                console.error("Error loading friends:", error);
+                friendsList.innerHTML = '<li>Error loading friends.</li>';
+            }
+        }
+        
+        function addEventListenersToFriendsList() {
+            friendsList.querySelectorAll('.unfriend-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation(); // Prevent li click event
+                    const friendId = e.target.dataset.friendId;
+                    if (confirm("Are you sure you want to unfriend this user?")) {
+                        try {
+                            await apiService.declineOrRemoveFriend(friendId);
+                            alert("User unfriended.");
+                            loadFriends();
+                        } catch (error) {
+                            console.error("Error unfriending user:", error);
+                            alert(error.message || "Failed to unfriend user.");
+                        }
+                    }
+                });
+            });
+        }
+
+
+        // ---- Chat Functionality (Basic Placeholder for now) ----
+        function startChatWithFriend(friendId, friendUsername) {
+            currentChatFriendId = friendId;
+            currentChatFriendUsername = friendUsername;
+            chatWithTitle.textContent = `Chat with ${friendUsername}`;
+            messagesDisplay.innerHTML = `<p class="placeholder-text">Loading chat history with ${friendUsername}...</p>`;
+            messageInputArea.style.display = 'flex';
+            messageInput.value = '';
+            messageInput.focus();
+            // TODO: Implement fetching chat history: await apiService._request(`/api/chat/${friendId}/history`, 'GET', null, true);
+            // TODO: Implement WebSocket connection for real-time chat
+            // For now, just a placeholder
+            setTimeout(() => {
+                 messagesDisplay.innerHTML = `<p class="placeholder-text">Chat with ${friendUsername} would appear here. Real-time chat via WebSockets is the next step!</p>`;
+            }, 1000);
+        }
+
+        sendMessageButton.addEventListener('click', () => {
+            const messageText = messageInput.value.trim();
+            if (messageText && currentChatFriendId) {
+                console.log(`Sending message to ${currentChatFriendUsername} (ID: ${currentChatFriendId}): ${messageText}`);
+                // TODO: Implement sending message via WebSocket
+                // Example: socket.emit('private_message', { recipientId: currentChatFriendId, text: messageText });
+                
+                // Simulate sent message
+                const msgEl = document.createElement('div');
+                msgEl.classList.add('message', 'sent');
+                msgEl.textContent = messageText;
+                // messagesDisplay.appendChild(msgEl); // This would add to bottom with normal flex
+                messagesDisplay.insertBefore(msgEl, messagesDisplay.firstChild); // Add to top for column-reverse
+                messagesDisplay.scrollTop = messagesDisplay.scrollHeight; // Scroll to bottom
+                messageInput.value = '';
+            }
+        });
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageButton.click(); }});
+
+
+        // ---- Initialization ----
+        async function fetchCurrentUserData() {
+            const authToken = localStorage.getItem('authToken');
+            if (authToken && !globalCurrentUserData) {
+                try {
+                    globalCurrentUserData = await apiService.getMyProfile();
+                } catch (error) {
+                    console.warn("Could not fetch current user data for chat page:", error.message);
+                    if (error.status === 401 || error.status === 403) {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUserGameHub');
+                        if (typeof renderNavigationBar === 'function') {
+                             renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
+                        }
+                    }
+                    globalCurrentUserData = null;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar(currentPage);
+            } else {
+                console.error("renderNavigationBar function not found from navigation.js");
+            }
+
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken && currentPage === 'chat.html') { 
+                alert("You need to be logged in to access Chat & Friends.");
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+                return; 
+            }
+            
+            await fetchCurrentUserData(); 
+            if (globalCurrentUserData) { // Solo cargar listas si el usuario está autenticado y sus datos cargados
+                loadPendingRequests();
+                loadFriends();
+            }
+        });
+    </script>
+</body>
+</html>

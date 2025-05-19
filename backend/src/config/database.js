@@ -84,6 +84,23 @@ function initializeDatabaseTables() {
         db.run(createInternalMessagesTableSql, (err) => {
             if (err) console.error('Error creating internal_messages table:', err.message);
         });
+
+        const createFriendshipsTableSql = `
+            CREATE TABLE IF NOT EXISTS friendships (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                requester_id INTEGER NOT NULL, -- User who sent the request
+                addressee_id INTEGER NOT NULL, -- User who received the request
+                status TEXT NOT NULL CHECK(status IN ('pending', 'accepted', 'declined', 'blocked')),
+                requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                accepted_at TIMESTAMP NULL,
+                UNIQUE (requester_id, addressee_id), -- Prevent duplicate requests in one direction
+                FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
+                FOREIGN KEY (addressee_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+        `;
+        db.run(createFriendshipsTableSql, (err) => {
+            if (err) console.error('Error creating friendships table:', err.message);
+        });
     });
 }
 
