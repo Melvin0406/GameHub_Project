@@ -135,6 +135,44 @@
     </footer>
 
     <script>
+        let globalCurrentUserData = null; // Variable global para datos del usuario en esta página
+
+        async function fetchCurrentUserData() {
+            const authToken = localStorage.getItem('authToken');
+            if (authToken && !globalCurrentUserData) { // Solo fetchea si hay token y no tenemos ya los datos
+                try {
+                    globalCurrentUserData = await apiService.getMyProfile();
+                    localStorage.setItem('currentUserGameHub', JSON.stringify(globalCurrentUserData)); // Opcional: actualizar localStorage
+                } catch (error) {
+                    console.warn("Could not fetch current user data for games page:", error.message);
+                    // Si falla (ej. token expirado), limpiar y actualizar UI
+                    if (error.status === 401 || error.status === 403) {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUserGameHub');
+                        renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html'); // Asume que renderNavigationBar está disponible
+                    }
+                    globalCurrentUserData = null;
+                }
+            }
+            // Asegúrate de que la navegación se actualice también si el estado de auth cambia aquí
+            // Esto es redundante si renderNavigationBar ya se llama en DOMContentLoaded
+            // renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
+        }
+
+        // Luego, en loadGameDetails, cuando necesitas el ID del usuario:
+        // let loggedInUserId = globalCurrentUserData ? globalCurrentUserData.id : null;
+        // if (loggedInUserId && mod.user_id === loggedInUserId) { ... }
+
+        // Y llama a fetchCurrentUserData en DOMContentLoaded:
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar(currentPage);
+            }
+            await fetchCurrentUserData(); // Carga datos del usuario si está logueado
+            loadGames();
+        });
+
         // apiService instancia ya debería estar disponible globalmente desde ApiService.js
         const mainNavBar = document.getElementById('main-navigation-bar'); // Corregido: ID de la barra de nav
         const gameGridContainer = document.getElementById('game-grid-container');
@@ -222,23 +260,64 @@
                     gameDetailsWithMods.mods.forEach(mod => {
                         const listItem = document.createElement('li');
                         listItem.className = 'mod-item';
+
                         // El backend ahora sirve la descarga vía HTTP
                         const downloadUrl = `/api/games/mods/download/${mod.id}`; 
                         const fileSizeMB = mod.file_size ? (mod.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A';
+
+                        let actionButtonsHtml = `<a href="${downloadUrl}" title="Download ${mod.file_name}">Download</a>`;
+                        const storedUserStr = localStorage.getItem('currentUserGameHub');
+                        let loggedInUserId = globalCurrentUserData ? globalCurrentUserData.id : null;
+                        if (storedUserStr) {
+                            try {
+                                loggedInUserId = JSON.parse(storedUserStr).id;
+                            } catch (e) { console.error("Error parsing currentUserGameHub from localStorage", e); }
+                        }
+
+                        if (loggedInUserId && mod.user_id === loggedInUserId) {
+                            actionButtonsHtml += `<br> <br> <button class="delete-mod-btn" data-mod-id="${mod.id}" data-mod-name="${mod.name}">Delete</button>`;
+                            // Podríamos añadir un botón de Edit aquí también en el futuro
+                            // actionButtonsHtml += ` <button class="edit-mod-btn" data-mod-id="${mod.id}">Edit</button>`;
+                        }
+
                         listItem.innerHTML = `
                             <div class="mod-info">
-                                <h4>${mod.name} (v${mod.version || 'N/A'})</h4>
+                                <h4><span class="math-inline">${mod.name} (v</span>${mod.version || 'N/A'})</h4>
                                 <p>${mod.description || 'No description.'}</p>
                                 <p><small>File: ${mod.file_name} | Size: ${fileSizeMB}</small></p>
                                 <p><small>Uploaded by: ${mod.uploaded_by_username || 'Unknown'} on ${new Date(mod.upload_date).toLocaleDateString()}</small></p>
                             </div>
                             <div class="mod-actions">
-                                <a href="${downloadUrl}" title="Download ${mod.file_name}">Download</a>
+                                ${actionButtonsHtml}
                             </div>
                         `;
                         modListContainer.appendChild(listItem);
                     });
                 }
+
+                modListContainer.querySelectorAll('.delete-mod-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const modId = event.target.dataset.modId;
+                        const modName = event.target.dataset.modName;
+
+                        if (confirm(`Are you sure you want to delete the mod "${modName}"? This action cannot be undone.`)) {
+                            try {
+                                const result = await apiService.deleteMod(modId); // Usa el nuevo método de la fachada
+                                alert(result.message || "Mod deleted successfully.");
+                                // Recargar los detalles del juego para refrescar la lista de mods
+                                // currentSelectedGame ya debería tener el objeto del juego actual
+                                if (currentSelectedGame) {
+                                    loadGameDetails(currentSelectedGame); 
+                                } else {
+                                    showGamesList(); // Fallback si no tenemos el juego actual
+                                }
+                            } catch (error) {
+                                console.error("Error deleting mod:", error);
+                                alert(`Failed to delete mod: ${error.message}`);
+                            }
+                        }
+                    });
+                });
             } catch (error) {
                 console.error(`Error loading mods for game ${game.id}:`, error);
                 modListContainer.innerHTML = `<li class="status-error">Error loading mods: ${error.message}</li>`;

@@ -33,3 +33,8 @@ router.post(
 router.get('/mods/download/:modId', gameController.downloadModFile);
 
 module.exports = router;
+
+// authMiddleware para asegurar que el usuario esté logueado y para obtener req.user.id
+router.delete('/mods/:modId', authMiddleware, gameController.deleteMod);
+
+module.exports = router;

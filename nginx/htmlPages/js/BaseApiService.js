@@ -3,14 +3,11 @@
 class BaseApiService {
     constructor(baseUrl = '/api') {
         if (this.constructor === BaseApiService) {
-            // Esto simula que la clase es abstracta y no debe ser instanciada directamente.
             throw new Error("La clase abstracta 'BaseApiService' no puede ser instanciada directamente.");
         }
         this.baseUrl = baseUrl;
     }
 
-    // Método "template" o utilidad común para realizar peticiones fetch.
-    // Este método es la lógica compleja que la fachada simplificará.
     async _request(endpoint, method = 'GET', body = null, requiresAuth = false) {
         const url = `${this.baseUrl}${endpoint}`;
         const headers = {
@@ -73,7 +70,7 @@ class BaseApiService {
         }
     
         const config = {
-            method: 'POST', // Asumimos POST para uploads
+            method: 'POST',
             headers: headers,
             body: formData,
         };
@@ -99,13 +96,4 @@ class BaseApiService {
     async sendEmail(to, subject, text) {
         throw new Error("Método 'sendEmail' debe ser implementado por la subclase.");
     }
-
-    // async getMe() { // Ejemplo de otro método "abstracto"
-    //     throw new Error("Método 'getMe' debe ser implementado por la subclase.");
-    // }
-
-    // Puedes añadir más métodos que definan la "interfaz" de tu servicio API aquí.
 }
-
-// No exportamos nada aquí si se va a incluir directamente con <script>
-// Si usaras módulos ES6, harías: export default BaseApiService;

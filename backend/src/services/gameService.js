@@ -145,3 +145,70 @@ exports.getModFilePath = async (modId) => {
         originalName: mod.file_name // El nombre con el que se descargará
     };
 };
+
+exports.deleteUserMod = async (modId, requestingUserId) => {
+    if (!FTP_MODS_ROOT_PATH) {
+        throw new Error("FTP root path configuration is missing.");
+    }
+
+    const modToDelete = await modRepository.findModById(modId);
+
+    if (!modToDelete) {
+        const error = new Error('Mod not found.');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Verificar propiedad: solo el usuario que subió el mod puede borrarlo
+    if (modToDelete.user_id !== requestingUserId) {
+        const error = new Error('You are not authorized to delete this mod.');
+        error.statusCode = 403; // Forbidden
+        throw error;
+    }
+
+    // Construir la ruta completa al archivo físico del mod
+    // modToDelete.ftp_file_path es algo como "GameFolderName/modfile.zip"
+    const modFilePathOnServer = path.join(FTP_MODS_ROOT_PATH, modToDelete.ftp_file_path);
+
+    // 1. Borrar la entrada de la base de datos
+    const dbResult = await modRepository.deleteModByIdAndUserId(modId, requestingUserId);
+
+    if (dbResult.changes === 0) {
+        // Esto podría pasar si hubo una condición de carrera o el mod ya no existía/pertenecía al usuario.
+        // O si el findModById encontró algo pero el deleteModByIdAndUserId no por alguna razón (poco probable con la lógica actual).
+        console.warn(`Attempted to delete mod (ID: ${modId}) from DB, but no rows were affected. Mod might have been already deleted or ownership mismatch.`);
+        // Aún intentaremos borrar el archivo físico si existe, por si acaso.
+    }
+    
+    // 2. Borrar el archivo físico del sistema de archivos (FTP)
+    try {
+        await fs.access(modFilePathOnServer); // Verificar si el archivo existe antes de intentar borrarlo
+        await fs.unlink(modFilePathOnServer);
+        console.log(`Successfully deleted mod file: ${modFilePathOnServer}`);
+    } catch (fileError) {
+        // Si el archivo no existe, fs.access lanzará un error.
+        // Si fs.unlink falla por otra razón (ej. permisos), también se capturará aquí.
+        console.error(`Error deleting mod file (${modFilePathOnServer}): ${fileError.message}. The database entry might have been removed.`);
+        // No relanzamos el error aquí si la entrada de la BD ya se borró,
+        // pero se podría considerar una lógica más compleja para manejar esta inconsistencia.
+        // Si dbResult.changes > 0, el borrado de BD fue exitoso.
+        if (dbResult.changes > 0 && fileError.code !== 'ENOENT') { // ENOENT = file not found (lo cual está bien si ya se borró o la BD estaba desincronizada)
+             // Si la BD se borró pero el archivo no, es un problema menor que si la BD no se borró.
+             // Por ahora, solo logueamos.
+        } else if (dbResult.changes === 0 && fileError.code !== 'ENOENT') {
+            // Si no se borró de la BD Y no se pudo borrar el archivo (y no es porque no exista)
+            throw new Error(`Failed to delete mod file. Database entry may or may not have been removed.`);
+        }
+    }
+
+    if (dbResult.changes === 0 && modToDelete) {
+        // Si el findModById lo encontró y pertenecía al usuario, pero el delete no afectó filas,
+        // y no hubo error de archivo (o el archivo no existía)
+        const error = new Error('Mod found but could not be deleted from database (already deleted or ownership issue).');
+        error.statusCode = 404; // O 403
+        throw error;
+    }
+
+
+    return { message: 'Mod deleted successfully.' };
+};

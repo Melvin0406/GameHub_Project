@@ -22,10 +22,6 @@ class ApiService extends BaseApiService {
         return this._request('/email/send', 'POST', { to, subject, text }, true); // true porque requiere autenticación
     }
 
-    // async getMe() { // Si añades getMe a BaseApiService
-    //     return this._request('/auth/me', 'GET', null, true);
-    // }
-
     // Nuevos métodos para juegos y mods
     async getAllGames() {
         return this._request('/games', 'GET', null, false); // No requiere autenticación para listar juegos
@@ -67,6 +63,11 @@ class ApiService extends BaseApiService {
     async uploadProfilePicture(formData) {
         // Usaremos el _uploadRequest que maneja FormData sin 'Content-Type: application/json'
         return this._uploadRequest('/users/me/profile-picture', formData, true);
+    }
+
+    async deleteMod(modId) {
+        // El método _request ya maneja el token si requiresAuth es true
+        return this._request(`/games/mods/${modId}`, 'DELETE', null, true); 
     }
 }
 
