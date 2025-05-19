@@ -69,4 +69,27 @@ exports.updateProfileImageUrl = (userId, imageUrl) => {
     });
 };
 
-// Podrías añadir más funciones: findUserById, updateUser, deleteUser, etc.
+exports.searchUsersByUsername = (searchTerm, excludeUserId) => {
+    return new Promise((resolve, reject) => {
+        // Use LIKE for partial matching, exclude the current user
+        const sql = "SELECT id, username, profile_image_url FROM users WHERE username LIKE ? AND id != ?";
+        db.all(sql, [`%${searchTerm}%`, excludeUserId], (err, rows) => {
+            if (err) reject(new Error("Error searching users."));
+            else resolve(rows);
+        });
+    });
+};
+
+exports.findUserByExactUsername = (username) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT id, username, email, profile_image_url FROM users WHERE username = ?";
+        db.get(sql, [username], (err, row) => {
+            if (err) {
+                console.error("Error in userRepository.findUserByExactUsername:", err.message);
+                reject(new Error("Error fetching user by exact username from database."));
+            } else {
+                resolve(row); // Devuelve la fila del usuario o undefined si no se encuentra
+            }
+        });
+    });
+};

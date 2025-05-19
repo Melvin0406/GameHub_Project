@@ -73,6 +73,31 @@ class ApiService extends BaseApiService {
     async updateModDetails(modId, modData) { // modData será un objeto { name, description, version }
         return this._request(`/games/mods/${modId}`, 'PUT', modData, true);
     }
+
+    async searchUsers(searchTerm) {
+        return this._request(`/friends/search-users?q=${encodeURIComponent(searchTerm)}`, 'GET', null, true);
+    }
+
+    // (Podrías añadir aquí los otros métodos para amigos que faltan, como sendFriendRequest, acceptFriendRequest, etc.)
+    async sendFriendRequest(username) {
+        return this._request(`/friends/request/${username}`, 'POST', null, true);
+    }
+
+    async acceptFriendRequest(requesterId) {
+        return this._request(`/friends/accept/${requesterId}`, 'PUT', null, true);
+    }
+
+    async declineOrRemoveFriend(otherUserId) {
+        return this._request(`/friends/remove/${otherUserId}`, 'DELETE', null, true);
+    }
+
+    async getFriends() {
+        return this._request('/friends', 'GET', null, true);
+    }
+
+    async getPendingFriendRequests() {
+        return this._request('/friends/pending', 'GET', null, true);
+    }
 }
 
 // Crear una instancia global de la fachada para que sea fácil de usar en otras partes del frontend.
