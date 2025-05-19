@@ -102,3 +102,29 @@ exports.deleteModByIdAndUserId = (modId, userId) => {
         });
     });
 };
+
+exports.updateModDetails = (modId, userId, { name, description, version }) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE mods 
+            SET name = ?, description = ?, version = ?
+            WHERE id = ? AND user_id = ? 
+        `;
+        // El orden de los parámetros debe coincidir con los '?'
+        db.run(sql, [name, description, version, modId, userId], function(err) {
+            if (err) {
+                console.error("Error en modRepository.updateModDetails:", err.message);
+                reject(new Error("Error updating mod details in database."));
+            } else {
+                if (this.changes === 0) {
+                    // Esto puede significar que el mod no se encontró con ese ID y user_id,
+                    // o que los datos enviados eran idénticos a los existentes.
+                    // Para ser más precisos, podríamos hacer un SELECT previo, pero por ahora está bien.
+                    reject({ statusCode: 404, message: "Mod not found for this user, or no changes were made."});
+                } else {
+                    resolve({ changes: this.changes });
+                }
+            }
+        });
+    });
+};

@@ -212,3 +212,36 @@ exports.deleteUserMod = async (modId, requestingUserId) => {
 
     return { message: 'Mod deleted successfully.' };
 };
+
+exports.updateUserModDetails = async (modId, requestingUserId, modDetails) => {
+    const { name, description, version } = modDetails;
+
+    if (!name) { // El nombre del mod es usualmente requerido
+        const error = new Error('Mod name is required.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Primero, verificamos si el mod existe y pertenece al usuario (opcional, ya que el UPDATE lo hará, pero bueno para un mensaje 403/404 más claro)
+    const existingMod = await modRepository.findModById(modId); // Asumiendo que findModById devuelve user_id
+    if (!existingMod) {
+        const error = new Error('Mod not found.');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (existingMod.user_id !== requestingUserId) {
+        const error = new Error('You are not authorized to edit this mod.');
+        error.statusCode = 403; // Forbidden
+        throw error;
+    }
+
+    const result = await modRepository.updateModDetails(modId, requestingUserId, { name, description, version });
+    
+    // modRepository.updateModDetails ya rechaza si this.changes es 0 con un statusCode 404.
+    // Si llega aquí, significa que se actualizó al menos una fila.
+    
+    // Devolver el mod actualizado (opcional, pero útil para el frontend)
+    const updatedMod = await modRepository.findModById(modId); // Volver a fetchear para obtener la data actualizada
+    return { message: 'Mod details updated successfully.', mod: updatedMod };
+};

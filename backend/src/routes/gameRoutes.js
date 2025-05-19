@@ -31,10 +31,11 @@ router.post(
 // NUEVA RUTA para descargar un mod por su ID
 // Usamos :modId como parámetro. No necesita autenticación para descargar por ahora
 router.get('/mods/download/:modId', gameController.downloadModFile);
-
 module.exports = router;
 
 // authMiddleware para asegurar que el usuario esté logueado y para obtener req.user.id
 router.delete('/mods/:modId', authMiddleware, gameController.deleteMod);
+module.exports = router;
 
+router.put('/mods/:modId', authMiddleware, gameController.updateModDetails);
 module.exports = router;

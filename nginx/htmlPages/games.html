@@ -1,50 +1,26 @@
 <!DOCTYPE html>
-<html lang="en"> <head>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
-    <title>Games & Mods - GameHub Local</title> 
-    <script src="js/authGuard.js"></script>
+    <title>Games & Mods - GameHub Local</title>
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
-    <script src="js/navigation.js"></script>
-    <style>
+    <script src="js/navigation.js"></script> <style>
         /* CSS General y de Navegación (similar al anterior pero ajustado) */
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
         header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
-        header h1#page-title { margin: 0; font-size: 2.5em; } /* ID para el título de la página */
+        header h1#page-title { margin: 0; font-size: 2.5em; }
         
-        nav#main-navigation-bar { /* ID para la barra de navegación principal */
-            background-color: #252525; 
-            padding: 0.85rem 0; 
-            text-align: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        nav#main-navigation-bar a { 
-            color: #00aaff; 
-            margin: 0 1.2rem; /* Aumentado el margen un poco */
-            text-decoration: none; 
-            font-weight: bold; 
-            font-size: 1.1em; 
-            transition: color 0.3s, text-shadow 0.3s; 
-            padding: 0.5rem 0; /* Para mejor área de clic */
-        }
+        nav#main-navigation-bar { background-color: #252525; padding: 0.85rem 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        nav#main-navigation-bar a { color: #00aaff; margin: 0 1.2rem; text-decoration: none; font-weight: bold; font-size: 1.1em; transition: color 0.3s, text-shadow 0.3s; padding: 0.5rem 0; }
         nav#main-navigation-bar a:hover, 
-        nav#main-navigation-bar a.active { 
-            color: #007bff; 
-            text-shadow: 0 0 5px rgba(0,123,255,0.7);
-        }
-        /* Estilo para el enlace de Logout para diferenciarlo si es necesario */
-        nav#main-navigation-bar a#logout-link {
-            color: #ff4d4d; /* Un color diferente para logout */
-        }
-        nav#main-navigation-bar a#logout-link:hover {
-            color: #ff8080;
-        }
+        nav#main-navigation-bar a.active { color: #007bff; text-shadow: 0 0 5px rgba(0,123,255,0.7); }
+        nav#main-navigation-bar a#logout-link { color: #ff6b6b; }
+        nav#main-navigation-bar a#logout-link:hover { color: #ff8080; }
 
         main { padding: 2rem; max-width: 1300px; margin: 2rem auto; }
         .section-title { text-align: center; font-size: 2.2em; margin-bottom: 2.5rem; color: #00aaff; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* ... (El resto de tus estilos para .game-grid, .game-card, #game-detail-section, etc. pueden permanecer aquí sin cambios) ... */
-        /* Copia aquí los estilos que te gustaron de la respuesta anterior para game-grid, game-card, etc. */
         .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
         .game-card { background-color: #2c2c2c; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; text-decoration: none; color: #e0e0e0; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease; }
         .game-card:hover { transform: translateY(-8px); box-shadow: 0 8px 25px rgba(0,123,255,0.7); }
@@ -54,6 +30,7 @@
         .game-card-content p.game-description { font-size: 0.95em; color: #b0b0b0; flex-grow: 1; margin-bottom: 1rem; }
         .game-card-button { display: block; background: linear-gradient(45deg, #007bff, #0056b3); color: white; padding: 0.8rem; text-align: center; border-radius: 0 0 8px 8px; text-decoration: none; font-weight: bold; transition: background-color 0.3s; }
         .game-card-button:hover { background: linear-gradient(45deg, #0056b3, #003d80); }
+        
         #game-detail-section { margin-top: 3rem; background-color: #252525; padding: 2.5rem; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.4); }
         #game-detail-header { display: flex; align-items: center; border-bottom: 1px solid #444; padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
         #game-detail-header img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-right: 1.5rem; border: 2px solid #007bff;}
@@ -61,71 +38,115 @@
         #game-detail-description { color: #ccc; margin-top: 0.5rem; }
         .mod-list-title { font-size: 1.8em; margin-bottom: 1rem; color: #00aaff;}
         .mod-list { list-style: none; padding: 0; }
-        .mod-item { background-color: #333; margin-bottom: 1rem; padding: 1.25rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #007bff; }
+        .mod-item { background-color: #333; margin-bottom: 1rem; padding: 1.25rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #007bff; gap: 1rem; }
+        .mod-info { flex-grow: 1;   min-width: 0; }
         .mod-info h4 { margin: 0 0 0.6rem 0; font-size: 1.3em; color: #00ddff; }
-        .mod-info p { margin: 0.3rem 0; font-size: 0.9em; color: #b0b0b0; }
+        .mod-info p { margin: 0.3rem 0; font-size: 0.9em; color: #b0b0b0; min-width: 0; }
         .mod-info small { color: #888; }
-        .mod-actions a, .mod-actions button { background-color: #007bff; color: #fff; padding: 0.6rem 1.2rem; text-decoration: none; border-radius: 5px; margin-left: 0.75rem; border: none; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
-        .mod-actions a:hover, .mod-actions button:hover { background-color: #0056b3; }
+        
+        .mod-actions { display: flex;
+            flex-shrink: 0; /* Evita que el contenedor de acciones se encoja demasiado */
+            align-items: center; /* Alinea los botones verticalmente si tuvieran diferentes alturas */
+            gap: 0.5rem; /* Espacio entre los botones (Download, Edit, Delete) */
+        }
+        .mod-actions a, .mod-actions button { padding: 0.6rem 1rem; text-decoration: none; border-radius: 5px; margin-left: 0.75rem; border: none; cursor: pointer; font-weight: bold; transition: background-color 0.2s; white-space: nowrap; }
+        .mod-actions a { background-color: #007bff; color: #fff; display:inline-block; /* Para que el padding funcione bien */ }
+        .mod-actions a:hover { background-color: #0056b3; }
+        .mod-actions button.edit-mod-btn { background-color: #28a745; color: white; } /* Verde */
+        .mod-actions button.edit-mod-btn:hover { background-color: #218838; }
+        .mod-actions button.delete-mod-btn { background-color: #dc3545; color: white; } /* Rojo */
+        .mod-actions button.delete-mod-btn:hover { background-color: #c82333; }
+
         #upload-mod-section { margin-top: 2.5rem; padding: 2rem; background-color: #2c2c2c; border-radius: 8px; }
         #upload-mod-section h3 { margin-top: 0; font-size: 1.6em; color: #00aaff; margin-bottom: 1rem; }
         #uploadModForm label { display: block; margin-bottom: 0.6rem; font-weight: bold; color: #ccc; }
         #uploadModForm input[type="text"], #uploadModForm textarea, #uploadModForm input[type="file"] { width: calc(100% - 24px); padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #555; border-radius: 5px; background-color: #383838; color: #e0e0e0; font-size: 1em; }
         #uploadModForm textarea { min-height: 100px; resize: vertical; }
-        #uploadModForm button { display: inline-block; font-size: 1em; }
-        .status-message { margin-top: 1rem; padding: 0.8rem; border-radius: 5px; text-align: center; font-weight: bold; }
+        #uploadModForm button { display: inline-block; font-size: 1em; background-color: #007bff; color:white; }
+        #uploadModForm button:hover { background-color: #0056b3;}
+
+        .status-message { margin-top: 1rem; padding: 0.8rem; border-radius: 5px; text-align: center; font-weight: bold; min-height: 1.2em; }
         .status-success { background-color: #28a745; color: white; }
         .status-error { background-color: #dc3545; color: white; }
         .loading-message { text-align: center; font-size: 1.5em; padding: 3rem; color: #00aaff; }
-        #back-to-games { margin-bottom: 1.5rem; font-size: 1em; }
-        footer { text-align: center; padding: 1.5rem 0; background-color: #121212; color: #888; margin-top: 3rem; border-top: 1px solid #333; }
+        #back-to-games { margin-bottom: 1.5rem; font-size: 1em; /* Estilo ya en .mod-actions button */ }
+        
+        /* Modal Styles (Reutilizado para el modal de edición) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
+        .modal-content { background-color: #2c2c2c; margin: 10% auto; padding: 25px; border: 1px solid #555; width: 90%; max-width: 600px; border-radius: 8px; position: relative; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
+        .modal-content label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #ccc; }
+        .modal-content input[type="text"], .modal-content textarea { width: calc(100% - 24px); padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #555; border-radius: 5px; background-color: #383838; color: #e0e0e0; font-size: 1em; }
+        .modal-content textarea { min-height: 100px; resize: vertical; }
+        .modal-content button[type="submit"] { background-color: #007bff; color:white; }
+        .modal-content button[type="submit"]:hover { background-color: #0056b3; }
+        .close-btn { color: #aaa; float: right; font-size: 32px; font-weight: bold; position: absolute; top: 5px; right: 15px; }
+        .close-btn:hover, .close-btn:focus { color: #fff; text-decoration: none; cursor: pointer; }
 
+        footer { text-align: center; padding: 1.5rem 0; background-color: #121212; color: #888; margin-top: 3rem; border-top: 1px solid #333; }
     </style>
 </head>
 <body>
     <header>
-        <h1 id="page-title">Games & Mods</h1> <nav id="main-navigation-bar">
-            <a href="index.html">Loading Navigation...</a>
-        </nav>
+        <h1 id="page-title">Games & Mods</h1>
+        <nav id="main-navigation-bar">
+            </nav>
     </header>
 
     <main>
         <div id="games-list-section">
-            <h2 class="section-title">Explore Our Games</h2> <div id="game-grid-container" class="game-grid">
-                <p class="loading-message">Loading games...</p> </div>
+            <h2 class="section-title">Explore Our Games</h2>
+            <div id="game-grid-container" class="game-grid">
+                <p class="loading-message">Loading games...</p>
+            </div>
         </div>
 
         <div id="game-detail-section" style="display:none;">
-            <button id="back-to-games" class="mod-actions button">← Back to Games List</button> <div id="game-detail-header">
+            <button id="back-to-games" class="mod-actions button">← Back to Games List</button>
+            <div id="game-detail-header">
                 <img id="game-detail-cover" src="images/placeholder_game.png" alt="Game Cover">
                 <div>
-                    <h2 id="game-detail-title"></h2> <p id="game-detail-description"></p> </div>
+                    <h2 id="game-detail-title"></h2>
+                    <p id="game-detail-description"></p>
+                </div>
             </div>
             
-            <h3 class="mod-list-title">Available Mods:</h3> <ul id="mod-list-container" class="mod-list">
+            <h3 class="mod-list-title">Available Mods:</h3>
+            <ul id="mod-list-container" class="mod-list">
                 </ul>
 
             <div id="upload-mod-section" style="display:none;">
-                <h3>Upload Your Mod for this Game</h3> <form id="uploadModForm" enctype="multipart/form-data">
-                    <div>
-                        <label for="modName">Mod Name:</label>
-                        <input type="text" id="modName" name="name" required>
-                    </div>
-                    <div>
-                        <label for="modVersion">Mod Version (e.g., 1.0, 2.1b):</label>
-                        <input type="text" id="modVersion" name="version">
-                    </div>
-                    <div>
-                        <label for="modDescription">Brief Description:</label>
-                        <textarea id="modDescription" name="description"></textarea>
-                    </div>
-                    <div>
-                        <label for="modFile">Mod File (.zip, .rar, .jar, etc.):</label>
-                        <input type="file" id="modFile" name="modFile" required>
-                    </div>
+                <h3>Upload Your Mod for this Game</h3>
+                <form id="uploadModForm" enctype="multipart/form-data">
+                    <div><label for="modName">Mod Name:</label><input type="text" id="modName" name="name" required></div>
+                    <div><label for="modVersion">Mod Version (e.g., 1.0):</label><input type="text" id="modVersion" name="version"></div>
+                    <div><label for="modDescription">Brief Description:</label><textarea id="modDescription" name="description"></textarea></div>
+                    <div><label for="modFile">Mod File (.zip, .rar, .jar, etc.):</label><input type="file" id="modFile" name="modFile" required></div>
                     <button type="submit">Upload Mod</button>
                 </form>
                 <div id="uploadStatusMessage" class="status-message" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div id="editModModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeEditModModal">&times;</span>
+                <h2>Edit Mod Details</h2>
+                <form id="editModForm">
+                    <input type="hidden" id="editModIdInput" name="modId"> <div>
+                        <label for="editModName">Mod Name:</label>
+                        <input type="text" id="editModName" name="name" required>
+                    </div>
+                    <div>
+                        <label for="editModVersion">Mod Version:</label>
+                        <input type="text" id="editModVersion" name="version">
+                    </div>
+                    <div>
+                        <label for="editModDescription">Description:</label>
+                        <textarea id="editModDescription" name="description"></textarea>
+                    </div>
+                    <button type="submit" class="action-button">Save Changes</button>
+                </form>
+                <div id="editModStatusMessage" class="status-message" style="display:none;"></div>
             </div>
         </div>
     </main>
@@ -135,46 +156,8 @@
     </footer>
 
     <script>
-        let globalCurrentUserData = null; // Variable global para datos del usuario en esta página
-
-        async function fetchCurrentUserData() {
-            const authToken = localStorage.getItem('authToken');
-            if (authToken && !globalCurrentUserData) { // Solo fetchea si hay token y no tenemos ya los datos
-                try {
-                    globalCurrentUserData = await apiService.getMyProfile();
-                    localStorage.setItem('currentUserGameHub', JSON.stringify(globalCurrentUserData)); // Opcional: actualizar localStorage
-                } catch (error) {
-                    console.warn("Could not fetch current user data for games page:", error.message);
-                    // Si falla (ej. token expirado), limpiar y actualizar UI
-                    if (error.status === 401 || error.status === 403) {
-                        localStorage.removeItem('authToken');
-                        localStorage.removeItem('currentUserGameHub');
-                        renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html'); // Asume que renderNavigationBar está disponible
-                    }
-                    globalCurrentUserData = null;
-                }
-            }
-            // Asegúrate de que la navegación se actualice también si el estado de auth cambia aquí
-            // Esto es redundante si renderNavigationBar ya se llama en DOMContentLoaded
-            // renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
-        }
-
-        // Luego, en loadGameDetails, cuando necesitas el ID del usuario:
-        // let loggedInUserId = globalCurrentUserData ? globalCurrentUserData.id : null;
-        // if (loggedInUserId && mod.user_id === loggedInUserId) { ... }
-
-        // Y llama a fetchCurrentUserData en DOMContentLoaded:
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
-            }
-            await fetchCurrentUserData(); // Carga datos del usuario si está logueado
-            loadGames();
-        });
-
-        // apiService instancia ya debería estar disponible globalmente desde ApiService.js
-        const mainNavBar = document.getElementById('main-navigation-bar'); // Corregido: ID de la barra de nav
+        // apiService instance is globally available
+        
         const gameGridContainer = document.getElementById('game-grid-container');
         const gamesListSection = document.getElementById('games-list-section');
         
@@ -189,16 +172,43 @@
         const uploadModForm = document.getElementById('uploadModForm');
         const uploadStatusMessage = document.getElementById('uploadStatusMessage');
 
+        // Elementos del Modal de Edición
+        const editModModal = document.getElementById('editModModal');
+        const closeEditModModalBtn = document.getElementById('closeEditModModal');
+        const editModForm = document.getElementById('editModForm');
+        const editModIdInput = document.getElementById('editModIdInput'); // ID actualizado
+        const editModNameInput = document.getElementById('editModName');
+        const editModVersionInput = document.getElementById('editModVersion');
+        const editModDescriptionInput = document.getElementById('editModDescription');
+        const editModStatusMessage = document.getElementById('editModStatusMessage');
+
         let currentSelectedGame = null;
-        const FTP_BASE_URL_DOWNLOAD = "ftp://servidor-juego.casa.local"; // O la URL HTTP si sirves vía backend
+        let globalCurrentUserData = null; 
+
+        async function fetchCurrentUserData() {
+            const authToken = localStorage.getItem('authToken');
+            if (authToken && !globalCurrentUserData) {
+                try {
+                    globalCurrentUserData = await apiService.getMyProfile();
+                    // No es necesario guardar en localStorage aquí si solo lo usamos en esta sesión de página.
+                } catch (error) {
+                    console.warn("Could not fetch current user data for games page:", error.message);
+                    if (error.status === 401 || error.status === 403) {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUserGameHub'); // Limpiar por si acaso
+                        if (typeof renderNavigationBar === 'function') {
+                             renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
+                        }
+                    }
+                    globalCurrentUserData = null;
+                }
+            }
+        }
         
-        renderNavigationBar();
-        
-        // ---- Cargar Juegos ----
         async function loadGames() {
             gameGridContainer.innerHTML = '<p class="loading-message">Loading games...</p>';
             try {
-                const games = await apiService.getAllGames(); // Usando el método de la fachada
+                const games = await apiService.getAllGames();
                 gameGridContainer.innerHTML = ''; 
                 if (!games || games.length === 0) {
                     gameGridContainer.innerHTML = '<p>No games available at the moment.</p>';
@@ -208,10 +218,10 @@
                     const card = document.createElement('div');
                     card.className = 'game-card';
                     card.dataset.gameId = game.id;
-                    card.dataset.gameName = game.name; // Guardar para fácil acceso
+                    card.dataset.gameName = game.name;
                     card.dataset.gameDescription = game.description;
                     card.dataset.gameCover = game.cover_image_url;
-                    card.dataset.gameFtpFolder = game.ftp_folder_name; // Guardamos el nombre de la carpeta FTP del juego
+                    card.dataset.gameFtpFolder = game.ftp_folder_name;
 
                     card.innerHTML = `
                         <img src="${game.cover_image_url || 'images/placeholder_game.png'}" alt="${game.name}" class="game-cover">
@@ -221,9 +231,7 @@
                         </div>
                         <span class="game-card-button">View Mods</span>
                     `;
-                    card.addEventListener('click', () => {
-                        loadGameDetails(game); // Pasa el objeto juego completo
-                    });
+                    card.addEventListener('click', () => loadGameDetails(game));
                     gameGridContainer.appendChild(card);
                 });
             } catch (error) {
@@ -232,27 +240,24 @@
             }
         }
 
-        // ---- Cargar Detalles del Juego y Mods ----
         async function loadGameDetails(game) {
             currentSelectedGame = game;
-
             gamesListSection.style.display = 'none';
             gameDetailSection.style.display = 'block';
-            
             gameDetailCover.src = game.cover_image_url || 'images/placeholder_game.png';
             gameDetailCover.alt = `Cover for ${game.name}`;
             gameDetailTitle.textContent = game.name;
             gameDetailDescription.textContent = game.description || 'No detailed description for this game.';
-            
             modListContainer.innerHTML = '<p class="loading-message">Loading mods...</p>';
-            if (localStorage.getItem('authToken')) { // Solo mostrar sección de subida si está logueado
+            
+            if (localStorage.getItem('authToken')) {
                 uploadModSection.style.display = 'block';
             } else {
                 uploadModSection.style.display = 'none';
             }
 
             try {
-                const gameDetailsWithMods = await apiService.getGameDetails(game.id); // Usando el método de la fachada
+                const gameDetailsWithMods = await apiService.getGameDetails(game.id);
                 modListContainer.innerHTML = '';
                 if (!gameDetailsWithMods.mods || gameDetailsWithMods.mods.length === 0) {
                     modListContainer.innerHTML = '<li>No mods available for this game. Be the first to upload one!</li>';
@@ -260,32 +265,29 @@
                     gameDetailsWithMods.mods.forEach(mod => {
                         const listItem = document.createElement('li');
                         listItem.className = 'mod-item';
-
-                        // El backend ahora sirve la descarga vía HTTP
                         const downloadUrl = `/api/games/mods/download/${mod.id}`; 
                         const fileSizeMB = mod.file_size ? (mod.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A';
-
+                        
                         let actionButtonsHtml = `<a href="${downloadUrl}" title="Download ${mod.file_name}">Download</a>`;
-                        const storedUserStr = localStorage.getItem('currentUserGameHub');
-                        let loggedInUserId = globalCurrentUserData ? globalCurrentUserData.id : null;
-                        if (storedUserStr) {
-                            try {
-                                loggedInUserId = JSON.parse(storedUserStr).id;
-                            } catch (e) { console.error("Error parsing currentUserGameHub from localStorage", e); }
-                        }
+                        const loggedInUserId = globalCurrentUserData ? globalCurrentUserData.id : null;
 
                         if (loggedInUserId && mod.user_id === loggedInUserId) {
-                            actionButtonsHtml += `<br> <br> <button class="delete-mod-btn" data-mod-id="${mod.id}" data-mod-name="${mod.name}">Delete</button>`;
-                            // Podríamos añadir un botón de Edit aquí también en el futuro
-                            // actionButtonsHtml += ` <button class="edit-mod-btn" data-mod-id="${mod.id}">Edit</button>`;
+                            actionButtonsHtml += ` <button class="edit-mod-btn" 
+                                                        data-mod-id="${mod.id}" 
+                                                        data-mod-name="${mod.name}"
+                                                        data-mod-version="${mod.version || ''}"
+                                                        data-mod-description="${mod.description || ''}">Edit</button>`;
+                            actionButtonsHtml += ` <button class="delete-mod-btn" 
+                                                        data-mod-id="${mod.id}" 
+                                                        data-mod-name="${mod.name}">Delete</button>`;
                         }
 
                         listItem.innerHTML = `
                             <div class="mod-info">
-                                <h4><span class="math-inline">${mod.name} (v</span>${mod.version || 'N/A'})</h4>
+                                <h4>${mod.name} (v${mod.version || 'N/A'})</h4>
                                 <p>${mod.description || 'No description.'}</p>
                                 <p><small>File: ${mod.file_name} | Size: ${fileSizeMB}</small></p>
-                                <p><small>Uploaded by: ${mod.uploaded_by_username || 'Unknown'} on ${new Date(mod.upload_date).toLocaleDateString()}</small></p>
+                                <p><small>Uploaded by: ${mod.uploaded_by_username || 'Unknown'} on ${new Date(mod.upload_date).toLocaleDateString('en-US')}</small></p>
                             </div>
                             <div class="mod-actions">
                                 ${actionButtonsHtml}
@@ -295,29 +297,14 @@
                     });
                 }
 
+                // Add event listeners for dynamically created buttons
                 modListContainer.querySelectorAll('.delete-mod-btn').forEach(button => {
-                    button.addEventListener('click', async (event) => {
-                        const modId = event.target.dataset.modId;
-                        const modName = event.target.dataset.modName;
-
-                        if (confirm(`Are you sure you want to delete the mod "${modName}"? This action cannot be undone.`)) {
-                            try {
-                                const result = await apiService.deleteMod(modId); // Usa el nuevo método de la fachada
-                                alert(result.message || "Mod deleted successfully.");
-                                // Recargar los detalles del juego para refrescar la lista de mods
-                                // currentSelectedGame ya debería tener el objeto del juego actual
-                                if (currentSelectedGame) {
-                                    loadGameDetails(currentSelectedGame); 
-                                } else {
-                                    showGamesList(); // Fallback si no tenemos el juego actual
-                                }
-                            } catch (error) {
-                                console.error("Error deleting mod:", error);
-                                alert(`Failed to delete mod: ${error.message}`);
-                            }
-                        }
-                    });
+                    button.addEventListener('click', handleDeleteMod);
                 });
+                modListContainer.querySelectorAll('.edit-mod-btn').forEach(button => {
+                    button.addEventListener('click', handleOpenEditModal);
+                });
+
             } catch (error) {
                 console.error(`Error loading mods for game ${game.id}:`, error);
                 modListContainer.innerHTML = `<li class="status-error">Error loading mods: ${error.message}</li>`;
@@ -328,19 +315,90 @@
             gameDetailSection.style.display = 'none';
             gamesListSection.style.display = 'block';
             currentSelectedGame = null;
-            if (uploadModSection) uploadModSection.style.display = 'none'; // Ocultar al volver
+            if (uploadModSection) uploadModSection.style.display = 'none';
         }
         backToGamesButton.addEventListener('click', showGamesList);
 
-        // ---- Subida de Mods ----
+        async function handleDeleteMod(event) {
+            const modId = event.target.dataset.modId;
+            const modName = event.target.dataset.modName;
+            if (confirm(`Are you sure you want to delete the mod "${modName}"? This action cannot be undone.`)) {
+                try {
+                    const result = await apiService.deleteMod(modId);
+                    alert(result.message || "Mod deleted successfully.");
+                    if (currentSelectedGame) loadGameDetails(currentSelectedGame);
+                    else showGamesList();
+                } catch (error) {
+                    console.error("Error deleting mod:", error);
+                    alert(`Failed to delete mod: ${error.message}`);
+                }
+            }
+        }
+
+        function handleOpenEditModal(event) {
+            const modId = event.target.dataset.modId;
+            const modName = event.target.dataset.modName;
+            const modVersion = event.target.dataset.modVersion;
+            const modDescription = event.target.dataset.modDescription;
+
+            editModIdInput.value = modId;
+            editModNameInput.value = modName;
+            editModVersionInput.value = modVersion;
+            editModDescriptionInput.value = modDescription;
+            
+            editModStatusMessage.style.display = 'none';
+            editModModal.style.display = 'block';
+        }
+
+        if(closeEditModModalBtn) {
+            closeEditModModalBtn.onclick = () => editModModal.style.display = "none";
+        }
+        window.addEventListener('click', (event) => {
+            if (event.target == editModModal) editModModal.style.display = "none";
+        });
+
+        if(editModForm) {
+            editModForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const modId = editModIdInput.value;
+                const name = editModNameInput.value;
+                const version = editModVersionInput.value;
+                const description = editModDescriptionInput.value;
+
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.disabled = true;
+                submitButton.textContent = 'Saving...';
+                editModStatusMessage.style.display = 'none';
+                editModStatusMessage.className = 'status-message';
+
+                try {
+                    const result = await apiService.updateModDetails(modId, { name, description, version });
+                    editModStatusMessage.textContent = result.message || "Mod details updated successfully.";
+                    editModStatusMessage.classList.add('status-success');
+                    
+                    setTimeout(() => {
+                        editModModal.style.display = "none";
+                        if (currentSelectedGame) loadGameDetails(currentSelectedGame); 
+                    }, 1500);
+                } catch (error) {
+                    console.error("Error updating mod details:", error);
+                    editModStatusMessage.textContent = error.message || "Failed to update mod details.";
+                    editModStatusMessage.classList.add('status-error');
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                    editModStatusMessage.style.display = 'block';
+                }
+            });
+        }
+
         if (uploadModForm) {
             uploadModForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
-                // ... (lógica de validación de token y currentSelectedGame como antes) ...
                 const authToken = localStorage.getItem('authToken');
-                if (!authToken) { /* ... ya manejado por renderNavigationBar o authGuard ... */ return; }
-                if (!currentSelectedGame || !currentSelectedGame.id) { /* ... alert ... */ return; }
-
+                if (!authToken) { alert("You must be logged in to upload mods."); return; }
+                if (!currentSelectedGame || !currentSelectedGame.id) { alert("Error: No game selected for mod upload."); return; }
 
                 const formData = new FormData(this);
                 const submitButton = this.querySelector('button[type="submit"]');
@@ -351,12 +409,7 @@
                 uploadStatusMessage.className = 'status-message';
 
                 try {
-                    // Usando el método de ApiService que puede manejar FormData (si lo implementaste)
-                    // O la llamada fetch directa como la tenías antes si ApiService no lo maneja.
-                    // Asumamos que adaptaste ApiService para tener un método _uploadRequest
-                    // y un método público uploadMod que lo usa.
-                    const data = await apiService.uploadMod(currentSelectedGame.id, formData); // Asume que uploadMod existe en ApiService
-
+                    const data = await apiService.uploadMod(currentSelectedGame.id, formData);
                     uploadStatusMessage.textContent = data.message || "Mod uploaded successfully.";
                     uploadStatusMessage.classList.add('status-success');
                     this.reset(); 
@@ -373,15 +426,16 @@
             });
         }
 
-        // Inicialización de la página
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            renderNavigationBar(currentPage); // Llama a la función para construir la nav bar
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar(currentPage);
+            } else {
+                console.error("renderNavigationBar function not found. Make sure navigation.js is loaded BEFORE this script.");
+            }
+            await fetchCurrentUserData();
             loadGames();
-            
-            // (authGuard.js debería manejar la redirección si esta página es protegida y no hay token)
         });
-
     </script>
 </body>
 </html>
