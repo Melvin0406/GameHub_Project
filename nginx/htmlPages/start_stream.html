@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your Stream - GameHub Local</title>
+    <script src="js/authGuard.js"></script>
+    <script src="js/BaseApiService.js"></script>
+    <script src="js/ApiService.js"></script>
+    <script src="js/navigation.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; }
+        header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
+        header h1#page-main-title { margin: 0; font-size: 2.5em; }
+        
+        nav#main-navigation-bar { background-color: #252525; padding: 0.85rem 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        nav#main-navigation-bar a { color: #00aaff; margin: 0 1.2rem; text-decoration: none; font-weight: bold; font-size: 1.1em; transition: color 0.3s, text-shadow 0.3s; padding: 0.5rem 0; }
+        nav#main-navigation-bar a:hover, nav#main-navigation-bar a.active { color: #007bff; text-shadow: 0 0 5px rgba(0,123,255,0.7); }
+        nav#main-navigation-bar a#logout-link { color: #ff6b6b; }
+        nav#main-navigation-bar a#logout-link:hover { color: #ff8080; }
+
+        main { padding: 2rem; max-width: 900px; margin: 2rem auto; background-color: #252525; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        .section { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #383838; }
+        .section:last-child { border-bottom: none; margin-bottom: 0; }
+        .section h2 { font-size: 1.8em; color: #00aaff; margin-top:0; margin-bottom: 1rem; }
+        .section h3 { font-size: 1.3em; color: #00ddff; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .section p, .section li { line-height: 1.7; color: #ccc; }
+        .section ol { padding-left: 20px; }
+        .section code, .code-block { 
+            background-color: #111; 
+            color: #bef0ff; 
+            padding: 0.2em 0.4em; 
+            border-radius: 3px; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 0.95em;
+        }
+        .code-block {
+            display: block;
+            padding: 0.8rem 1.2rem; 
+            margin: 0.5rem 0 1rem 0;
+            white-space: pre-wrap; 
+            word-break: break-all;
+            border: 1px solid #444;
+        }
+        .highlight { color: #ffae57; font-weight: bold; }
+        button#copy-stream-key { 
+            margin-left: 10px; padding: 5px 10px; font-size: 0.9em; 
+            background-color: #007bff; color:white; border:none; border-radius:4px; cursor:pointer;
+        }
+        button#copy-stream-key:hover { background-color: #0056b3; }
+        .status-message { margin-top: 1rem; padding: 0.8rem; border-radius: 5px; text-align: center; font-weight: bold; }
+        .status-error { background-color: #dc3545; color: white; }
+        footer { text-align: center; padding: 1.5rem 0; background-color: #121212; color: #888; margin-top: 3rem; border-top: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="page-main-title">Start Your Stream</h1>
+        <nav id="main-navigation-bar">
+            </nav>
+    </header>
+
+    <main>
+        <div id="stream-setup-info" class="section">
+            <h2>Your Streaming Setup</h2>
+            <p>Use the following details in your streaming software (e.g., OBS Studio, Streamlabs Desktop):</p>
+            
+            <div style="margin-top: 1.5rem;">
+                <h3>1. RTMP Server URL:</h3>
+                <p>This is the address your software will send your video and audio data to.</p>
+                <div class="code-block" id="rtmp-url-display">Loading...</div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <h3>2. Your Unique Stream Key:</h3>
+                <p>This key identifies your stream on our server. <strong class="highlight">Keep it private!</strong> Anyone with this key can stream to your designated channel.</p>
+                <div class="code-block">
+                    <span id="stream-key-display" style="font-weight:bold; color:#50fa7b;">Loading...</span>
+                    <button id="copy-stream-key" title="Copy Stream Key">Copy</button>
+                </div>
+            </div>
+            <div id="stream-info-status" class="status-message" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>OBS Studio Setup Guide (Basic)</h2>
+            <ol>
+                <li>Open OBS Studio on your computer.</li>
+                <li>Go to <strong>File</strong> > <strong>Settings</strong> (or <strong>OBS</strong> > <strong>Preferences</strong> on macOS).</li>
+                <li>In the Settings window, select the <strong>Stream</strong> tab from the left sidebar.</li>
+                <li>For the <strong>Service</strong> dropdown, choose "Custom...".</li>
+                <li>
+                    In the <strong>Server</strong> field, paste the "RTMP Server URL" exactly as shown above.
+                    <br><em>(It should look like: <code>rtmp://servidor-stream.casa.local/hls</code> or similar)</em>
+                </li>
+                <li>
+                    In the <strong>Stream Key</strong> field, paste your unique "Stream Key" shown above.
+                </li>
+                <li>Click "Apply" and then "OK" to save your settings.</li>
+                <li>Back in the main OBS window, set up your "Scenes" and "Sources" (e.g., Game Capture, Display Capture, Webcam, Microphone).</li>
+                <li>When you are ready to go live, click the "Start Streaming" button in OBS.</li>
+                <li>
+                    Your stream will then be available for others to view at:
+                    <div class="code-block" id="view-stream-link-display">Loading your personal stream link...</div>
+                    (You can share this link with your friends and viewers!)
+                </li>
+            </ol>
+        </div>
+         <div class="section">
+            <h2>Important Notes:</h2>
+            <ul>
+                <li>Ensure your internet connection has sufficient upload speed for stable streaming.</li>
+                <li>The "hls" part in the RTMP URL (e.g., <code>/hls</code>) is important as it tells our server to prepare your stream for HLS playback.</li>
+                <li>If you change your password or suspect your stream key is compromised, you might need a way to regenerate it (this functionality is not yet built).</li>
+            </ul>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
+    </footer>
+
+    <script>
+        // apiService instance should be globally available
+        const rtmpUrlDisplay = document.getElementById('rtmp-url-display');
+        const streamKeyDisplay = document.getElementById('stream-key-display');
+        const viewStreamLinkDisplay = document.getElementById('view-stream-link-display');
+        const copyStreamKeyButton = document.getElementById('copy-stream-key');
+        const streamInfoStatus = document.getElementById('stream-info-status');
+
+        function displayStreamInfoError(message) {
+            streamInfoStatus.textContent = message;
+            streamInfoStatus.className = 'status-message status-error'; // Ensure class is set
+            streamInfoStatus.style.display = 'block';
+            rtmpUrlDisplay.textContent = "Error loading configuration.";
+            streamKeyDisplay.textContent = "Error loading key.";
+            viewStreamLinkDisplay.textContent = "Could not generate view link.";
+        }
+
+        async function loadStreamInfo() {
+            try {
+                const data = await apiService.getMyStreamInfo(); // Uses token from ApiService
+                
+                if (data && data.rtmp_url && data.stream_key) {
+                    rtmpUrlDisplay.textContent = data.rtmp_url;
+                    streamKeyDisplay.textContent = data.stream_key;
+
+                    const currentHostname = window.location.hostname;
+                    let streamDomainForViewLink = 'servidor-stream.casa.local'; // Default
+                    if (currentHostname.includes('cetys.local')) {
+                        streamDomainForViewLink = 'servidor-stream.cetys.local';
+                    }
+                    // The actual stream page is index.html in the nginx/html/ root
+                    const viewUrl = `http://${streamDomainForViewLink}/index.html?key=${encodeURIComponent(data.stream_key)}`;
+                    viewStreamLinkDisplay.innerHTML = `<a href="${viewUrl}" target="_blank">${viewUrl}</a>`;
+                    streamInfoStatus.style.display = 'none'; // Hide if previously shown
+                } else {
+                   displayStreamInfoError("Could not retrieve complete stream information from server.");
+                }
+            } catch (error) {
+                console.error("Error fetching stream info:", error);
+                displayStreamInfoError(error.message || "Failed to load your stream information. Please try again.");
+                 if (error.requiresLogin || error.status === 401 || error.status === 403) {
+                    // authGuard.js should handle redirect, but as a fallback:
+                    alert("Your session may have expired or you are not authorized. Redirecting to login.");
+                    setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+                }
+            }
+        }
+
+        copyStreamKeyButton.addEventListener('click', () => {
+            const key = streamKeyDisplay.textContent;
+            if (key && key !== 'Loading...' && !key.toLowerCase().includes('error')) {
+                navigator.clipboard.writeText(key).then(() => {
+                    alert('Stream Key copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy stream key: ', err);
+                    alert('Failed to copy key automatically. Please copy it manually.');
+                });
+            } else {
+                alert('Stream key not available to copy.');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = 'start_stream.html'; // Set current page for navigation.js
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar(currentPage);
+            } else {
+                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded before this script.");
+            }
+            
+            // authGuard.js (if included in head) should have already checked for token.
+            // We still check here before making API calls that require auth.
+            if (localStorage.getItem('authToken')) {
+                 loadStreamInfo();
+            } else {
+                // This case should ideally be handled by authGuard.js redirecting.
+                // If authGuard didn't redirect, it means this page isn't strictly protected by it,
+                // but the functionality needs auth.
+                displayStreamInfoError("You must be logged in to view your stream setup information.");
+            }
+        });
+    </script>
+</body>
+</html>

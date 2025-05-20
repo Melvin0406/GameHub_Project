@@ -29,11 +29,11 @@ exports.findUserByUsernameOrEmail = (username, email) => {
     });
 };
 
-exports.createUser = (username, email, passwordHash) => {
+exports.createUser = (username, email, passwordHash, streamKey) => {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
+        const sql = `INSERT INTO users (username, email, password_hash, stream_key) VALUES (?, ?, ?, ?)`;
         // 'this' dentro de la callback de db.run se refiere al statement
-        db.run(sql, [username, email, passwordHash], function(err) {
+        db.run(sql, [username, email, passwordHash, streamKey], function(err) {
             if (err) {
                 console.error("Error en userRepository.createUser:", err.message);
                 reject(new Error("Error al crear el usuario."));
@@ -47,7 +47,7 @@ exports.createUser = (username, email, passwordHash) => {
 
 exports.findUserById = (id) => { // Necesario para el endpoint /me
     return new Promise((resolve, reject) => {
-        const sql = "SELECT id, username, email, profile_image_url FROM users WHERE id = ?";
+        const sql = "SELECT id, username, email, profile_image_url, stream_key FROM users WHERE id = ?";
         db.get(sql, [id], (err, row) => {
             if (err) reject(new Error("Error fetching user by ID."));
             else resolve(row);

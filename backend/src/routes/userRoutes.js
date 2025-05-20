@@ -32,5 +32,7 @@ router.post(
     profilePicUpload.single('profilePictureFile'), // 'profilePictureFile' es el name del input file
     userController.uploadProfilePicture
 );
+module.exports = router;
 
+router.get('/me/stream-info', authMiddleware, userController.getMyStreamInfo); // <--- NUEVA RUTA
 module.exports = router;

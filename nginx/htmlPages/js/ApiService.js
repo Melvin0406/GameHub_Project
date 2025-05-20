@@ -97,6 +97,10 @@ class ApiService extends BaseApiService {
     async getRecentMods(limit = 4) {
         return this._request(`/games/mods/recent?limit=${limit}`, 'GET', null, true);
     }
+
+    async getMyStreamInfo() {
+        return this._request('/users/me/stream-info', 'GET', null, true);
+    }
 }
 
 // Instancia global
