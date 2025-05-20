@@ -245,3 +245,9 @@ exports.updateUserModDetails = async (modId, requestingUserId, modDetails) => {
     const updatedMod = await modRepository.findModById(modId); // Volver a fetchear para obtener la data actualizada
     return { message: 'Mod details updated successfully.', mod: updatedMod };
 };
+
+exports.getRecentMods = async (limit = 5) => {
+    const mods = await modRepository.findRecentMods(limit);
+    // Puedes procesar los mods aquí si es necesario antes de enviarlos
+    return mods;
+};

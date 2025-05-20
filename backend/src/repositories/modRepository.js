@@ -128,3 +128,28 @@ exports.updateModDetails = (modId, userId, { name, description, version }) => {
         });
     });
 };
+
+exports.findRecentMods = (limit = 5) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                m.id, m.name as mod_name, m.description as mod_description, 
+                m.file_name, m.upload_date, 
+                g.id as game_id, g.name as game_name, g.ftp_folder_name as game_ftp_folder_name,
+                u.username as uploaded_by_username
+            FROM mods m
+            JOIN games g ON m.game_id = g.id
+            LEFT JOIN users u ON m.user_id = u.id
+            ORDER BY m.upload_date DESC
+            LIMIT ?
+        `;
+        db.all(sql, [limit], (err, rows) => {
+            if (err) {
+                console.error("Error in modRepository.findRecentMods:", err.message);
+                reject(new Error("Error fetching recent mods from database."));
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+};
