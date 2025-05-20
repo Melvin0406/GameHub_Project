@@ -110,6 +110,57 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- NUEVA LÓGICA PARA CHAT DE STREAM ---
+    socket.on('join_stream_chat', (streamKey) => {
+        if (!streamKey) {
+            console.log(`Socket ID ${socket.id} (${socket.user.username}) intentó unirse a un chat de stream sin streamKey.`);
+            return;
+        }
+        const roomName = `stream_${streamKey}`;
+        socket.join(roomName);
+        console.log(`User ${socket.user.username} (Socket ID: ${socket.id}) joined stream chat room: ${roomName}`);
+        // Opcional: Notificar a la sala que alguien se unió
+        // io.to(roomName).emit('user_joined_stream_chat', { username: socket.user.username });
+    });
+
+    socket.on('stream_chat_message', ({ streamKey, text }) => {
+        if (!socket.user) { // Doble verificación, aunque el middleware debería haberlo prevenido
+            socket.emit('chat_error', { message: "Authentication required to send messages." });
+            return;
+        }
+        if (!streamKey || !text || text.trim() === "") {
+            socket.emit('chat_error', { message: "Stream key and message text are required." });
+            return;
+        }
+
+        const roomName = `stream_${streamKey}`;
+        const messagePayload = {
+            username: socket.user.username, // Nombre del remitente
+            userId: socket.user.id,         // ID del remitente
+            profileImageUrl: socket.user.profile_image_url || 'images/default_avatar.png', // Foto del remitente
+            text: text,
+            timestamp: new Date().toISOString(),
+            streamKey: streamKey // Para que el cliente pueda filtrar si está en múltiples salas (poco probable aquí)
+        };
+
+        // Emitir el mensaje a todos en la sala de ese stream
+        io.to(roomName).emit('new_stream_message', messagePayload);
+        console.log(`Message in room ${roomName} from ${socket.user.username}: ${text}`);
+
+        // NOTA: No estamos guardando los mensajes de chat de stream en la BD en este ejemplo.
+        // Si quisieras guardarlos, aquí llamarías a un servicio/repositorio.
+    });
+
+    socket.on('leave_stream_chat', (streamKey) => {
+        if (!streamKey) return;
+        const roomName = `stream_${streamKey}`;
+        socket.leave(roomName);
+        console.log(`User ${socket.user.username} left stream chat room: ${roomName}`);
+        // Opcional: Notificar a la sala que alguien se fue
+        // io.to(roomName).emit('user_left_stream_chat', { username: socket.user.username });
+    });
+    // --- FIN NUEVA LÓGICA PARA CHAT DE STREAM ---
+
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.user.username} (ID: ${socket.user.id})`);
         delete connectedUsers[socket.user.id]; // Elimina al usuario de la lista de conectados

@@ -6,35 +6,27 @@
     <title>Live Stream - GameHub Local</title>
     
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-    <script src="../htmlPages/js/BaseApiService.js"></script>
+    
+    <script src="/socket.io/socket.io.js"></script> 
+    
+    <script src="../htmlPages/js/BaseApiService.js"></script> 
     <script src="../htmlPages/js/ApiService.js"></script>
     <script src="../htmlPages/js/navigation.js"></script>
 
     <style>
         body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #18181b; /* Un negro un poco más suave, común en plataformas de streaming */
-            color: #e0e0e0; 
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #18181b; color: #e0e0e0; 
+            display: flex; flex-direction: column; min-height: 100vh;
         }
         header { 
-            background-color: #121212; 
-            color: #fff; 
-            padding: 1rem 0; 
-            text-align: center; 
-            border-bottom: 3px solid #007bff; 
+            background-color: #121212; color: #fff; padding: 1rem 0; 
+            text-align: center; border-bottom: 3px solid #007bff; 
         }
         header h1#page-main-title { margin: 0; font-size: 2.2em; }
         
         nav#main-navigation-bar { 
-            background-color: #252525; 
-            padding: 0.85rem 0; 
-            text-align: center; 
+            background-color: #252525; padding: 0.85rem 0; text-align: center; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         nav#main-navigation-bar a { 
@@ -47,128 +39,72 @@
         nav#main-navigation-bar a#logout-link:hover { color: #ff8080; }
 
         main.stream-container {
-            display: flex;
-            flex-grow: 1;
-            padding: 1.5rem;
-            gap: 1.5rem;
-            max-width: 1600px; /* Ancho máximo para layouts grandes */
-            width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
+            display: flex; flex-grow: 1; padding: 1.5rem; gap: 1.5rem;
+            max-width: 1600px; width: 100%; margin: 0 auto; box-sizing: border-box;
         }
-
-        .video-main-content {
-            flex-grow: 1; /* Ocupa el espacio principal */
-            display: flex;
-            flex-direction: column;
-        }
-
+        .video-main-content { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; /* Para flexbox */ }
         #video-player-container {
-            width: 100%;
-            background-color: #000;
-            position: relative;
-            /* Para mantener la relación de aspecto 16:9 */
-            padding-top: 56.25%; /* 9 / 16 * 100% */
-            border-radius: 8px;
-            overflow: hidden;
+            width: 100%; background-color: #000; position: relative;
+            padding-top: 56.25%; border-radius: 8px; overflow: hidden;
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
-
-        #liveVideo {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 8px; /* Si el contenedor no tiene overflow:hidden */
-        }
-
+        #liveVideo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         #stream-info-panel {
-            background-color: #252525;
-            padding: 1rem;
-            margin-top: 1rem;
-            border-radius: 8px;
-            text-align: left;
+            background-color: #252525; padding: 1rem; margin-top: 1rem;
+            border-radius: 8px; text-align: left;
         }
         #stream-info-panel h2 { margin-top: 0; color: #00aaff; font-size: 1.5em; }
         #stream-info-panel p { margin: 0.5rem 0; font-size: 0.95em; }
 
-
         .chat-sidebar {
-            flex: 0 0 320px; /* Ancho fijo para el chat */
-            background-color: #252525;
-            padding: 1.5rem;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 120px - 3rem); /* Ajustar según altura de header/footer/padding */
-            min-height: 400px; /* Altura mínima */
+            flex: 0 0 320px; background-color: #252525; padding: 1.5rem; border-radius: 8px;
+            display: flex; flex-direction: column; 
+            max-height: calc(100vh - (2 * 1.5rem) - 100px); /* 100px aprox para header+nav+padding main */
         }
         .chat-sidebar h3 { margin-top: 0; color: #00aaff; border-bottom: 1px solid #444; padding-bottom: 0.75rem;}
-        .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 1rem; background-color: #1e1e1e; padding: 0.5rem; border-radius: 4px;}
-        .chat-messages p { font-size: 0.9em; margin: 0.5rem 0; }
-        .chat-input input { width: calc(100% - 22px); padding: 0.75rem; border: 1px solid #555; border-radius: 4px; background-color: #383838; color: #e0e0e0; }
-        .chat-input button { width: 100%; padding: 0.75rem; margin-top: 0.5rem; background-color: #007bff; color:white; border:none; border-radius:4px; cursor:pointer; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 1rem; background-color: #1e1e1e; padding: 0.5rem; border-radius: 4px; display:flex; flex-direction: column-reverse;}
+        .stream-chat-msg-item { padding: 0.5rem; margin-bottom: 0.5rem; line-height: 1.4; }
+        .stream-chat-msg-item .chat-msg-username { font-weight: bold; margin-right: 5px; }
+        .stream-chat-msg-item .chat-msg-text { word-wrap: break-word; }
+
+        .chat-input textarea { width: calc(100% - 16px); padding: 0.6rem; border: 1px solid #555; border-radius: 4px; background-color: #383838; color: #e0e0e0; resize: none; margin-bottom: 0.5rem; font-family: inherit; font-size:0.9em; min-height: 40px; }
+        .chat-input button { width: 100%; padding: 0.75rem; background-color: #007bff; color:white; border:none; border-radius:4px; cursor:pointer; font-size: 0.9em; }
         .chat-input button:hover { background-color: #0056b3; }
+        .chat-input button:disabled { background-color: #555; cursor: not-allowed; }
 
-
-        .action-buttons-bottom {
-            text-align: center;
-            margin-top: 2rem;
-            padding-bottom: 2rem; /* Espacio antes del footer */
-        }
-        .action-buttons-bottom .button-link {
-            display: inline-block;
-            padding: 0.8rem 1.8rem;
-            background-color: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background-color 0.2s;
-        }
-        .action-buttons-bottom .button-link:hover {
-            background-color: #0056b3;
-        }
-
-        footer { 
-            text-align: center; 
-            padding: 1rem 0; 
-            background-color: #121212; 
-            color: #888; 
-            border-top: 1px solid #333;
-            width: 100%;
-        }
+        .action-buttons-bottom { text-align: center; margin-top: 2rem; padding-bottom: 2rem; }
+        .action-buttons-bottom .button-link { display: inline-block; padding: 0.8rem 1.8rem; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background-color 0.2s; }
+        .action-buttons-bottom .button-link:hover { background-color: #0056b3; }
+        footer { text-align: center; padding: 1rem 0; background-color: #121212; color: #888; border-top: 1px solid #333; width: 100%; }
+        .placeholder-text { color: #777; text-align: center; padding: 1rem; }
     </style>
 </head>
 <body>
     <header>
         <h1 id="page-main-title">Live Stream</h1>
-        <nav id="main-navigation-bar">
-            </nav>
+        <nav id="main-navigation-bar"></nav>
     </header>
 
     <main class="stream-container">
         <div class="video-main-content">
             <div id="video-player-container">
                 <video id="liveVideo" controls autoplay playsinline muted></video>
-                </div>
+            </div>
             <div id="stream-info-panel">
-                <h2 id="stream-title">Stream Title Placeholder</h2>
-                <p id="streamer-name"><strong>Streamer:</strong> <span id="streamerNameSpan">YourFavoriteStreamer</span></p>
-                <p id="game-being-played"><strong>Game:</strong> <span id="gameNameSpan">Awesome Game Title</span></p>
-                </div>
+                <h2 id="stream-title">Loading Stream Info...</h2>
+                <p><strong>Streamer:</strong> <span id="streamerNameSpan">N/A</span></p>
+                <p><strong>Game:</strong> <span id="gameNameSpan">N/A</span></p>
+            </div>
         </div>
 
         <aside class="chat-sidebar">
             <h3>Stream Chat</h3>
             <div class="chat-messages" id="streamChatMessages">
-                <p><em>Chat placeholder: Welcome to the stream!</em></p>
-                </div>
+                <p class="placeholder-text" id="chat-placeholder">Connecting to chat...</p>
+            </div>
             <div class="chat-input">
-                <input type="text" id="chatMessageInput" placeholder="Say something...">
-                <button id="sendChatMessageButton">Send</button>
+                <textarea id="chatMessageInput" placeholder="Login to chat..." rows="2" disabled></textarea>
+                <button id="sendChatMessageButton" disabled>Send</button>
             </div>
         </aside>
     </main>
@@ -178,221 +114,278 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
+        <p>&copy; 2025 GameHub Local.</p>
     </footer>
 
     <script>
+        // --- DOM Elements ---
+        const videoElement = document.getElementById('liveVideo');
+        const backToMainSiteLink = document.getElementById('backToMainSiteLink');
         const streamTitleElement = document.getElementById('stream-title');
         const streamerNameSpan = document.getElementById('streamerNameSpan');
         const gameNameSpan = document.getElementById('gameNameSpan');
         
-        // Inicializar navegación común
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tokenFromUrl = urlParams.get('authToken');
+        const streamChatMessagesDiv = document.getElementById('streamChatMessages');
+        const chatMessageInput = document.getElementById('chatMessageInput');
+        const sendChatMessageButton = document.getElementById('sendChatMessageButton');
+        const chatPlaceholder = document.getElementById('chat-placeholder');
 
-            if (tokenFromUrl) {
-                localStorage.setItem('authToken', tokenFromUrl); // Guarda en el localStorage de servidor-stream...
-                // Limpia la URL para que el token no quede visible
-                const newUrl = window.location.pathname; // Sin query params
-                history.replaceState(null, '', newUrl);
+        // --- Global Variables ---
+        let hlsPlayer;
+        let socket = null; 
+        let currentStreamKey = null; 
+        let globalAuthToken = localStorage.getItem('authToken'); // Check initial token
+
+        // --- Helper Functions ---
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        const userColors = {};
+        const availableColors = ['#ff8c00', '#ff0055', '#00ff8c', '#007bff', '#a200ff', '#ff00ff', '#34ebcf', '#eb34a2'];
+        function getUserColor(username) {
+            if (!userColors[username]) {
+                userColors[username] = availableColors[Math.floor(Math.random() * availableColors.length)];
+            }
+            return userColors[username];
+        }
+
+        function appendStreamMessage(payload) {
+            if (!streamChatMessagesDiv) return;
+            if (chatPlaceholder && chatPlaceholder.parentNode === streamChatMessagesDiv) {
+                streamChatMessagesDiv.removeChild(chatPlaceholder);
             }
 
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar('view_stream.html');
-            } else {
-                console.error("renderNavigationBar function not found. Make sure navigation.js and its dependencies are correctly linked and ordered in nginx/html/js/");
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('stream-chat-msg-item');
+            
+            const usernameColor = getUserColor(payload.username);
+            msgDiv.innerHTML = `
+                <span class="chat-msg-username" style="color: ${usernameColor}; font-weight: bold;">${escapeHTML(payload.username)}:</span>
+                <span class="chat-msg-text">${escapeHTML(payload.text)}</span>
+            `;
+            streamChatMessagesDiv.insertBefore(msgDiv, streamChatMessagesDiv.firstChild);
+            streamChatMessagesDiv.scrollTop = 0; 
+        }
+
+        // --- Socket.IO Connection & Chat Logic ---
+        function connectStreamChatSocket(tokenForSocket) {
+            if (socket && socket.connected) { // Ya conectado, solo intentar unirse a la sala si es necesario
+                 if (currentStreamKey) socket.emit('join_stream_chat', currentStreamKey);
+                return;
             }
-            // (authGuard.js debería haber corrido si esta página es protegida)
-        });
+            if (!tokenForSocket){
+                console.warn("No auth token for chat socket connection. Chat will be disabled.");
+                chatMessageInput.placeholder = "Login to chat...";
+                chatMessageInput.disabled = true;
+                sendChatMessageButton.disabled = true;
+                if(chatPlaceholder) chatPlaceholder.textContent = "Login to participate in chat.";
+                return;
+            }
 
-        const videoElement = document.getElementById('liveVideo');
-        const backToMainSiteLink = document.getElementById('backToMainSiteLink');
-        let hlsPlayer; // Guardar la instancia de HLS para destruirla si es necesario
+            socket = io({ auth: { token: tokenForSocket } });
 
-        // Determinar la URL base del stream y del sitio principal dinámicamente
-        const currentHostname = window.location.hostname;
-        let streamBaseUrl;
-        let mainSiteBaseUrl;
+            socket.on('connect', () => {
+                console.log('StreamPage Socket.IO: Connected with ID:', socket.id);
+                if (currentStreamKey) {
+                    socket.emit('join_stream_chat', currentStreamKey);
+                }
+                chatMessageInput.placeholder = "Type your message...";
+                chatMessageInput.disabled = false;
+                sendChatMessageButton.disabled = false;
+                if(chatPlaceholder) chatPlaceholder.textContent = "Welcome to the chat!";
+            });
 
-        if (currentHostname.includes('cetys.local')) {
-            streamBaseUrl = 'http://servidor-stream.cetys.local';
-            mainSiteBaseUrl = 'http://servidor-juego.cetys.local';
-        } else { // Asumir casa.local o cualquier otro por defecto
-            streamBaseUrl = 'http://servidor-stream.casa.local';
-            mainSiteBaseUrl = 'http://servidor-juego.casa.local';
+            socket.on('connect_error', (err) => {
+                console.error('StreamPage Socket.IO: Connection Error -', err.message);
+                chatMessageInput.placeholder = "Chat connection error.";
+                chatMessageInput.disabled = true;
+                sendChatMessageButton.disabled = true;
+                if(chatPlaceholder) chatPlaceholder.textContent = "Could not connect to chat.";
+                 if (err.message.includes("Authentication error")) {
+                    alert("Chat authentication failed. Your session might be invalid. Please re-login.");
+                    localStorage.removeItem('authToken'); // Limpiar token local si la auth del socket falla
+                    if (typeof renderNavigationBar === 'function') {
+                        renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
+                    }
+                }
+            });
+
+            socket.on('new_stream_message', appendStreamMessage);
+
+            socket.on('chat_error', (error) => {
+                console.error('StreamPage Socket.IO: Chat Error from server -', error.message);
+                alert(`Chat Error: ${error.message || 'An unknown error occurred.'}`);
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log('StreamPage Socket.IO: Disconnected -', reason);
+                chatMessageInput.placeholder = "Chat disconnected.";
+                chatMessageInput.disabled = true;
+                sendChatMessageButton.disabled = true;
+                if(chatPlaceholder) chatPlaceholder.textContent = "Chat disconnected. Attempting to reconnect...";
+            });
         }
         
-        backToMainSiteLink.href = mainSiteBaseUrl + '/index.html'; // O a /games.html
-
-        // --- Lógica del Reproductor HLS ---
-        // Idealmente, la streamKey (ej. 'test') vendría de un parámetro URL
-        // Por ejemplo: view_stream.html?key=nombreDelStreamer
-        const urlParams = new URLSearchParams(window.location.search);
-        const streamKey = urlParams.get('key');
-
-        let hlsSourceUrl = '';
-        console.log("Attempting to load HLS stream from:", hlsSourceUrl);
-
+        // --- HLS Player and Stream Info Logic ---
         async function loadStreamPageContent() {
-            if (!streamKey) {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentStreamKey = urlParams.get('key');
+
+            if (!currentStreamKey) {
                 streamTitleElement.textContent = "No Stream Key Provided";
                 streamerNameSpan.textContent = "N/A";
                 gameNameSpan.textContent = "N/A";
-                alert("No stream key specified in the URL. Cannot load stream information.");
-                // Podrías ocultar el reproductor de video o mostrar un mensaje más prominente
-                document.getElementById('video-player-container').innerHTML = '<p style="color:white; text-align:center; padding-top:20%;">Please specify a stream key in the URL (e.g., ?key=your_stream_key)</p>';
+                document.getElementById('video-player-container').innerHTML = '<p class="placeholder-text" style="padding-top: 20%;">Please specify a stream key in the URL (e.g., ?key=your_stream_key)</p>';
+                if(chatPlaceholder) chatPlaceholder.textContent = "Stream key missing. Chat unavailable.";
+                chatMessageInput.disabled = true;
+                sendChatMessageButton.disabled = true;
                 return;
             }
 
-            // Establecer un título temporal mientras se carga la info
-            streamTitleElement.textContent = `Loading Stream: ${streamKey}...`;
-            hlsSourceUrl = `${streamBaseUrl}/hls/${streamKey}.m3u8`; // URL para el video
+            streamTitleElement.textContent = `Loading: ${currentStreamKey}...`;
+            const hlsSourceUrl = `${streamBaseUrl}/hls/${currentStreamKey}.m3u8`;
 
             try {
-                // Obtener información del stream desde el backend
-                const streamInfo = await apiService.getStreamInfo(streamKey);
-
+                const streamInfo = await apiService.getStreamInfo(currentStreamKey);
                 if (streamInfo) {
                     streamTitleElement.textContent = streamInfo.title || `${streamInfo.streamer_username}'s Stream`;
-                    streamerNameSpan.textContent = streamInfo.streamer_username || "Unknown Streamer";
+                    streamerNameSpan.textContent = streamInfo.streamer_username || "Unknown";
                     gameNameSpan.textContent = streamInfo.game_name || "Not Specified";
-                    // Si tuvieras un <img> para la foto de perfil del streamer:
-                    // if (streamInfo.streamer_profile_image_url) {
-                    //     streamerProfilePicElement.src = streamInfo.streamer_profile_image_url.startsWith('http') 
-                    //                                   ? streamInfo.streamer_profile_image_url 
-                    //                                   : `http://localhost:3000${streamInfo.streamer_profile_image_url}`;
-                    // } else {
-                    //     streamerProfilePicElement.src = 'js/default_avatar.png'; // Asumiendo que tienes una imagen default en html/js/
-                    // }
                 } else {
-                    // Esto no debería pasar si getStreamInfo lanza error en 404, pero por si acaso
-                    streamTitleElement.textContent = `Stream: ${streamKey} (Info not found)`;
-                    streamerNameSpan.textContent = "Unknown";
-                    gameNameSpan.textContent = "Unknown";
+                    streamTitleElement.textContent = `Stream: ${currentStreamKey} (Info Unavailable)`;
                 }
-
-                // Ahora que tenemos la info (o lo intentamos), inicializamos el player
-                initializeHlsPlayer();
-
             } catch (error) {
                 console.error("Error fetching stream info:", error);
-                streamTitleElement.textContent = `Stream: ${streamKey} (Error: ${error.message})`;
-                streamerNameSpan.textContent = "Error";
-                gameNameSpan.textContent = "Error";
-                // Opcional: No intentar cargar el video si la info del stream falla
-                // document.getElementById('video-player-container').innerHTML = `<p style="color:red; text-align:center; padding-top:20%;">Could not load stream info: ${error.message}</p>`;
-                // O intentar cargar el video de todas formas:
-                initializeHlsPlayer();
+                streamTitleElement.textContent = `Stream: ${currentStreamKey} (Could not load info: ${error.message})`;
+            }
+            
+            initializeHlsPlayer(hlsSourceUrl);
+
+            // Intentar unirse a la sala de chat si el socket ya está conectado
+            if (socket && socket.connected && currentStreamKey) {
+                socket.emit('join_stream_chat', currentStreamKey);
             }
         }
 
-        function initializeHlsPlayer() {
-            if (!hlsSourceUrl) {
-                console.error("HLS Source URL is not set. Cannot initialize player.");
+        function initializeHlsPlayer(sourceUrl) {
+            if (!sourceUrl) {
+                console.error("HLS Source URL is empty. Cannot initialize player.");
                 return;
             }
-            console.log("Attempting to load HLS stream from:", hlsSourceUrl);
+            console.log("Initializing HLS player for:", sourceUrl);
 
             if (Hls.isSupported()) {
-                hlsPlayer = new Hls({
-                    // Configuraciones opcionales de Hls.js
-                    // capLevelToPlayerSize: true, // Ajusta la calidad al tamaño del reproductor
-                    // abrMaxBitrate: 4000000, // Límite máximo de bitrate para ABR
-                });
-                hlsPlayer.loadSource(hlsSourceUrl);
+                if (hlsPlayer) hlsPlayer.destroy();
+                hlsPlayer = new Hls();
+                hlsPlayer.loadSource(sourceUrl);
                 hlsPlayer.attachMedia(videoElement);
-                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
-                    console.log("HLS.js: Manifest parsed, attempting to play.");
-                    videoElement.play().catch(error => {
-                        console.warn("Autoplay was prevented:", error.message, "User interaction might be required to start playback.");
-                        // Algunos navegadores bloquean autoplay con sonido. 'muted' en el tag <video> ayuda.
-                    });
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
+                    videoElement.play().catch(e => console.warn("Autoplay prevented:", e.message));
                 });
-                hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
+                hlsPlayer.on(Hls.Events.ERROR, (event, data) => {
                     console.error('HLS.js Error:', data.type, '-', data.details, '- Fatal:', data.fatal);
-                    if (data.fatal) {
-                        switch(data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                console.error("Fatal network error encountered, trying to recover...");
-                                // hlsPlayer.startLoad(); // Intenta reiniciar la carga
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                console.error("Fatal media error encountered, trying to recover...");
-                                // hlsPlayer.recoverMediaError(); // Intenta recuperar
-                                break;
-                            default:
-                                // No se puede recuperar, destruir HLS.js
-                                // hlsPlayer.destroy();
-                                alert(`Cannot load stream: ${data.details}. Please check the stream source or try again later.`);
-                                break;
-                        }
+                    // Simple error display for now
+                    if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR && data.details === 'manifestLoadError') {
+                         document.getElementById('video-player-container').innerHTML = `<p class="placeholder-text" style="padding-top: 20%; color:red;">Stream not found or offline (Manifest load error for ${currentStreamKey}).</p>`;
+                    } else if (data.fatal) {
+                        alert(`Cannot load stream: ${data.details}. Please check the stream or try again later.`);
                     }
                 });
             } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-                // Navegadores con soporte HLS nativo (ej. Safari)
-                videoElement.src = hlsSourceUrl;
-                videoElement.addEventListener('loadedmetadata', function() {
-                    console.log("Native HLS: Metadata loaded, attempting to play.");
-                    videoElement.play().catch(error => {
-                        console.warn("Autoplay was prevented (native HLS):", error.message);
-                    });
-                });
-                videoElement.addEventListener('error', function(e) {
-                    console.error('Native HLS Error:', e);
-                    alert("Cannot load stream. Please check the stream source or try again later.");
-                });
+                videoElement.src = sourceUrl;
+                videoElement.addEventListener('loadedmetadata', () => videoElement.play().catch(e => console.warn("Autoplay prevented:", e.message)));
+                videoElement.addEventListener('error', (e) => alert("Cannot load stream. Native HLS error."));
             } else {
                 alert("Sorry, your browser does not support HLS streaming.");
             }
         }
 
-        // Llama a loadStreamPageContent en DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            if (typeof renderNavigationBar === 'function') {
-                // Pasamos 'view_stream.html' como identificador conceptual para que la nav se marque activa
-                renderNavigationBar('view_stream.html'); 
-            } else { /* ... error ... */ }
-
-            loadStreamPageContent();
-        });
-
-        // Limpiar HLS player al salir de la página (opcional pero buena práctica)
-        window.addEventListener('beforeunload', () => {
-            if (hlsPlayer) {
-                hlsPlayer.destroy();
-                console.log("HLS player destroyed.");
-            }
-        });
-
-        // Lógica del Chat de Stream (Placeholder)
-        const sendChatMessageButton = document.getElementById('sendChatMessageButton');
-        const chatMessageInput = document.getElementById('chatMessageInput');
-        const streamChatMessages = document.getElementById('streamChatMessages');
-
+        // --- Event Listeners ---
         if (sendChatMessageButton) {
             sendChatMessageButton.addEventListener('click', () => {
-                const message = chatMessageInput.value.trim();
-                if (message) {
-                    // Aquí iría la lógica para enviar el mensaje vía WebSocket para el chat del stream
-                    console.log(`Stream Chat Message (to send): ${message}`);
-                    const p = document.createElement('p');
-                    p.innerHTML = `<strong>You:</strong> ${message}`; // Simulación
-                    streamChatMessages.appendChild(p);
-                    streamChatMessages.scrollTop = streamChatMessages.scrollHeight; // Auto-scroll
+                const messageText = chatMessageInput.value.trim();
+                if (!globalAuthToken) { alert("You must be logged in to chat."); return; }
+                if (!socket || !socket.connected) { alert("Not connected to chat. Please refresh."); return; }
+                if (messageText && currentStreamKey) {
+                    socket.emit('stream_chat_message', { streamKey: currentStreamKey, text: messageText });
                     chatMessageInput.value = '';
+                    chatMessageInput.focus();
                 }
             });
             chatMessageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendChatMessageButton.click();
-                }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessageButton.click(); }
             });
         }
+        
+        // --- Page Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParamsOnInit = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParamsOnInit.get('authToken');
+            let keyFromUrl = urlParamsOnInit.get('key');
 
+            if (tokenFromUrl) {
+                console.log("Token received from URL parameter:", tokenFromUrl);
+                localStorage.setItem('authToken', tokenFromUrl); // Guarda en el localStorage de servidor-stream...
+                globalAuthToken = tokenFromUrl; // Establece la variable global para esta sesión de página
+
+                // Limpia la URL para que el token no quede visible, pero conserva otros parámetros como 'key'
+                const newSearchParams = new URLSearchParams();
+                if (keyFromUrl) {
+                    newSearchParams.set('key', keyFromUrl);
+                }
+                
+                const newRelativePath = window.location.pathname + (newSearchParams.toString() ? '?' + newSearchParams.toString() : '');
+                history.replaceState(null, '', newRelativePath);
+                console.log("Token stored in localStorage for stream page and URL cleaned.");
+            } else {
+                // Si no vino en la URL, intenta cargarlo del localStorage de este dominio (servidor-stream...)
+                globalAuthToken = localStorage.getItem('authToken');
+                console.log("Token loaded from stream page's localStorage:", globalAuthToken);
+            }
+
+            const currentPageFile = 'live_streams.html';
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar(currentPageFile);
+            } else {
+                console.error("renderNavigationBar function not found.");
+            }
+
+            // Determinar URLs base
+            const currentHostnameOnLoad = window.location.hostname;
+            if (currentHostnameOnLoad.includes('cetys.local')) {
+                streamBaseUrl = 'http://servidor-stream.cetys.local';
+                mainSiteBaseUrl = 'http://servidor-juego.cetys.local';
+            } else {
+                streamBaseUrl = 'http://servidor-stream.casa.local';
+                mainSiteBaseUrl = 'http://servidor-juego.casa.local';
+            }
+            backToMainSiteLink.href = mainSiteBaseUrl + '/index.html';
+            
+            // Conectar socket si hay token
+            if (globalAuthToken) {
+                connectStreamChatSocket(globalAuthToken);
+            } else { // Configurar UI de chat para estado no logueado
+                chatMessageInput.placeholder = "Login to chat...";
+                chatMessageInput.disabled = true;
+                sendChatMessageButton.disabled = true;
+                if(chatPlaceholder) chatPlaceholder.textContent = "Login to participate in chat.";
+            }
+            
+            // Cargar contenido del stream (info y video)
+            await loadStreamPageContent(); 
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (hlsPlayer) hlsPlayer.destroy();
+            if (socket && socket.connected && currentStreamKey) {
+                socket.emit('leave_stream_chat', currentStreamKey); // Opcional: notificar al backend
+            }
+            // No desconectar el socket globalmente aquí, podría ser usado por otras pestañas/lógica.
+            // Si el socket es específico de esta página, sí: if (socket) socket.disconnect();
+        });
     </script>
 </body>
 </html>
