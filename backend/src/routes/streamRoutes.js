@@ -11,5 +11,6 @@ router.get('/live', streamController.listActiveStreams);
 router.post('/go-live', authMiddleware, streamController.goLive);
 router.post('/go-offline', authMiddleware, streamController.goOffline); // Usamos POST por consistencia, podría ser DELETE
 router.get('/me/status', authMiddleware, streamController.getMyLiveStatus); // Para que el streamer sepa su estado
+router.get('/info/:streamKey', streamController.getStreamInfoByKey);
 
 module.exports = router;

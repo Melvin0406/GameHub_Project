@@ -46,3 +46,14 @@ exports.getLiveStreamStatusByUserId = async (userId) => {
     const stream = await liveStreamRepository.findLiveStreamByUserId(userId);
     return { isLive: !!stream, streamDetails: stream || null };
 };
+
+exports.getPublicStreamInfo = async (streamKey) => {
+    const streamInfo = await liveStreamRepository.findActiveStreamByStreamKey(streamKey);
+    if (!streamInfo) {
+        const error = new Error('Live stream not found for this key, or it is offline.');
+        error.statusCode = 404;
+        throw error;
+    }
+    // streamInfo ya contiene streamer_username y streamer_profile_image_url del join
+    return streamInfo;
+};
