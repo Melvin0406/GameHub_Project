@@ -85,9 +85,7 @@
 
         <section class="content-section" id="streams-section">
             <h2 class="section-title">Live Streams</h2>
-            <p class="placeholder-text">Check out who's streaming live right now!</p>
-            <div style="text-align:center; margin-top:1rem;">
-                 <a href="#" id="view-streams-link" class="cta-button" style="background-color: #28a745;">View Live Streams</a>
+            <div id="live-streams-grid" class="card-grid"> <p class="loading-message">Loading live streams...</p>
             </div>
         </section>
     </main>
@@ -100,7 +98,7 @@
         // apiService instance should be globally available
         const featuredGamesGrid = document.getElementById('featured-games-grid');
         const recentModsGrid = document.getElementById('recent-mods-grid');
-        const viewStreamsLink = document.getElementById('view-streams-link');
+        const liveStreamsGrid = document.getElementById('live-streams-grid');
 
         function createGameCard(game) {
             const card = document.createElement('a'); // Enlace a la página de detalles del juego
@@ -170,14 +168,52 @@
                 recentModsGrid.innerHTML = '<p class="status-error">Could not load recent mods.</p>';
             }
         }
-        
-        function setupStreamLink() {
+
+        function createStreamCard(stream) {
+            // Construir la URL para ver el stream
             const currentHostname = window.location.hostname;
-            let streamDomain = 'servidor-stream.casa.local';
+            let streamDomainForViewLink = 'servidor-stream.casa.local';
             if (currentHostname.includes('cetys.local')) {
-                streamDomain = 'servidor-stream.cetys.local';
+                streamDomainForViewLink = 'servidor-stream.cetys.local';
             }
-            viewStreamsLink.href = `http://${streamDomain}/`; // O `http://${streamDomain}/index.html`
+            const viewUrl = `http://${streamDomainForViewLink}/index.html?key=${encodeURIComponent(stream.stream_key)}`;
+
+            const card = document.createElement('a');
+            card.href = viewUrl;
+            card.className = 'item-card stream-card'; // Puedes añadir una clase específica para streams
+            card.target = '_blank'; // Abrir en nueva pestaña
+
+            // Asumimos que stream.profile_image_url es la del streamer
+            // y stream.game_name y stream.title vienen del backend
+            card.innerHTML = `
+                <img src="${stream.profile_image_url || 'images/default_avatar.png'}" alt="${stream.username}'s stream" class="card-cover">
+                <div class="item-card-content">
+                    <h3>${stream.title || `${stream.username}'s Stream`}</h3>
+                    <p>Streamer: ${stream.username}</p>
+                    <p class="game-for-mod">Game: ${stream.game_name || 'Not specified'}</p>
+                    <span style="color:red; font-weight:bold;">🔴 LIVE</span>
+                </div>
+            `;
+            return card;
+        }
+
+        async function loadLiveStreams() {
+            if (!liveStreamsGrid) return; // Salir si el elemento no existe
+            liveStreamsGrid.innerHTML = '<p class="loading-message">Loading live streams...</p>';
+            try {
+                const streams = await apiService.getLiveStreams();
+                liveStreamsGrid.innerHTML = '';
+                if (streams && streams.length > 0) {
+                    streams.forEach(stream => {
+                        liveStreamsGrid.appendChild(createStreamCard(stream));
+                    });
+                } else {
+                    liveStreamsGrid.innerHTML = '<p class="placeholder-text">No one is streaming live right now. Be the first!</p>';
+                }
+            } catch (error) {
+                console.error("Error loading live streams:", error);
+                liveStreamsGrid.innerHTML = '<p class="status-error">Could not load live streams.</p>';
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -191,7 +227,7 @@
 
             loadFeaturedGames();
             loadRecentMods();
-            setupStreamLink();
+            loadLiveStreams();
         });
     </script>
 </body>

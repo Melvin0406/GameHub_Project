@@ -117,6 +117,22 @@ function initializeDatabaseTables() {
         db.run(createChatMessagesTableSql, (err) => {
             if (err) console.error('Error creating chat_messages table:', err.message);
         });
+
+        const createLiveStreamsTableSql = `
+            CREATE TABLE IF NOT EXISTS live_streams (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER UNIQUE NOT NULL, -- Solo un stream activo por usuario
+                stream_key TEXT NOT NULL,        -- La clave de stream del usuario
+                title TEXT,
+                game_name TEXT,                  -- Nombre del juego que está streameando
+                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+                FOREIGN KEY (stream_key) REFERENCES users (stream_key) ON DELETE CASCADE -- Opcional: si quieres asegurar consistencia
+            )
+        `;
+        db.run(createLiveStreamsTableSql, (err) => {
+            if (err) console.error('Error creating live_streams table:', err.message);
+        });
     });
 }
 

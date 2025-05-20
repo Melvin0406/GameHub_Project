@@ -15,6 +15,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const friendshipRoutes = require('./src/routes/friendshipRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 const chatService = require('./src/services/chatService');
+const streamRoutes = require('./src/routes/streamRoutes');
 
 require('./src/config/database'); // Inicializa la conexión y crea tablas
 
@@ -46,6 +47,7 @@ app.use('/api/internal-mail', internalMailRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/friends', friendshipRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/streams', streamRoutes);
 
 app.get('/', (req, res) => {
     res.send('¡El backend de GameHub está funcionando!');
