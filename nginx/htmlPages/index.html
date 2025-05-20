@@ -1,171 +1,198 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Inicio - Plataforma de Streaming</title>
-    <script src="js/authGuard.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to GameHub Local!</title>
+    <script src="js/BaseApiService.js"></script>
+    <script src="js/ApiService.js"></script>
+    <script src="js/navigation.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e1e; /* Fondo oscuro similar */
-            color: #e0e0e0; /* Texto claro similar */
-            line-height: 1.6;
-        }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
+        header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
+        header h1#page-main-title { margin: 0; font-size: 2.8em; letter-spacing: 1px;}
+        
+        nav#main-navigation-bar { background-color: #252525; padding: 0.85rem 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        nav#main-navigation-bar a { color: #00aaff; margin: 0 1.2rem; text-decoration: none; font-weight: bold; font-size: 1.1em; transition: color 0.3s, text-shadow 0.3s; padding: 0.5rem 0; }
+        nav#main-navigation-bar a:hover, 
+        nav#main-navigation-bar a.active { color: #007bff; text-shadow: 0 0 5px rgba(0,123,255,0.7); }
+        nav#main-navigation-bar a#logout-link { color: #ff6b6b; }
+        nav#main-navigation-bar a#logout-link:hover { color: #ff8080; }
 
-        header {
-            background-color: #121212; /* Header más oscuro */
+        main { padding: 0; /* Sin padding para que el hero ocupe todo el ancho */ }
+        
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('images/hero_background.jpg') no-repeat center center/cover; /* Necesitas una imagen de fondo */
+            padding: 6rem 2rem;
+            text-align: center;
             color: #fff;
-            padding: 1rem 0;
-            text-align: center;
-            border-bottom: 3px solid #007bff; /* Borde azul característico */
         }
+        .hero-section h2 { font-size: 3em; margin-bottom: 0.5rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.7); }
+        .hero-section p { font-size: 1.3em; margin-bottom: 2rem; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .hero-section .cta-button {
+            background-color: #007bff; color: white; padding: 1rem 2.5rem; text-decoration: none;
+            font-size: 1.2em; border-radius: 5px; font-weight: bold; transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: inline-block;
+        }
+        .hero-section .cta-button:hover { background-color: #0056b3; transform: translateY(-3px); }
 
-        header h1 {
-            margin: 0;
-            font-size: 2.5em; /* Tamaño de fuente similar */
-            color: #00aaff; /* Color del título similar */
-        }
+        .content-section { padding: 3rem 2rem; max-width: 1300px; margin: 0 auto; }
+        .section-title { text-align: center; font-size: 2.2em; margin-bottom: 2.5rem; color: #00aaff; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Estilos para tarjetas de juegos y mods (puedes reutilizar/adaptar de games.html) */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+        .item-card { background-color: #2c2c2c; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; text-decoration: none; color: #e0e0e0; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .item-card:hover { transform: translateY(-8px); box-shadow: 0 8px 25px rgba(0,123,255,0.7); }
+        .item-card img.card-cover { width: 100%; height: 180px; object-fit: cover; border-bottom: 3px solid #007bff; }
+        .item-card-content { padding: 1.25rem; flex-grow: 1; }
+        .item-card-content h3 { margin-top: 0; font-size: 1.5em; color: #00aaff; margin-bottom: 0.5rem; }
+        .item-card-content p { font-size: 0.9em; color: #b0b0b0; margin-bottom: 0.5rem; }
+        .item-card-content .game-for-mod { font-size: 0.8em; color: #888; font-style: italic; }
+        
+        .loading-message { text-align: center; font-size: 1.2em; padding: 2rem; color: #00aaff; }
+        .placeholder-text { text-align:center; color:#777; padding:1rem; }
 
-        nav {
-            background-color: #252525; /* Navegación un poco más clara que el header */
-            padding: 0.75rem 0;
-            text-align: center;
-            margin-top: 1rem; /* Añadido margen superior para separarlo del header */
-        }
-
-        nav a {
-            color: #00aaff; /* Color de los enlaces similar */
-            margin: 0 1.5rem;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em; /* Tamaño de fuente similar */
-            transition: color 0.3s;
-        }
-
-        nav a:hover, nav a.active {
-            color: #007bff; /* Hover similar */
-        }
-
-        main {
-            padding: 2rem;
-            max-width: 1300px; /* Ancho máximo similar */
-            margin: 2rem auto; /* Centrado similar */
-            text-align: center; /* Mantener el centrado del contenido principal */
-        }
-
-        main h2 {
-            font-size: 2.2em; /* Tamaño de fuente similar al título de sección */
-            margin-bottom: 1.5rem; /* Más espacio debajo del título */
-            color: #00aaff; /* Color similar */
-            text-transform: uppercase; /* Añadido uppercase para más similitud */
-            letter-spacing: 1px; /* Espaciado de letras sutil */
-        }
-
-        #userInfo {
-            font-size: 1em; /* Ajustar tamaño de fuente */
-            margin-bottom: 2rem;
-            color: #b0b0b0; /* Color de texto similar */
-        }
-
-        .button-grid {
-            display: grid; /* Usar grid para una mejor disposición */
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Columnas autoajustables */
-            gap: 1.5rem; /* Espacio entre botones */
-            margin-top: 2rem;
-            max-width: 600px; /* Ancho máximo del grid de botones */
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .boton {
-            display: flex;
-            align-items: center;
-            justify-content: center; /* Centrar icono y texto */
-            gap: 0.75rem;
-            padding: 0.8rem 1.2rem;
-            background: linear-gradient(45deg, #007bff, #0056b3); /* Gradiente similar */
-            color: white; /* Texto blanco */
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Añadir transición para box-shadow */
-            box-shadow: 0 3px 10px rgba(0,0,0,0.3); /* Sombra suave */
-        }
-
-        .boton i {
-            font-size: 1.2em; /* Iconos un poco más grandes */
-        }
-
-        .boton:hover {
-            background: linear-gradient(45deg, #0056b3, #003d80); /* Hover similar */
-            transform: translateY(-3px); /* Ligeramente elevado al pasar el ratón */
-            box-shadow: 0 6px 15px rgba(0,123,255,0.5); /* Sombra más intensa al hacer hover */
-        }
+        footer { text-align: center; padding: 1.5rem 0; background-color: #121212; color: #888; margin-top: 3rem; border-top: 1px solid #333; }
     </style>
 </head>
 <body>
     <header>
-        <h1>Plataforma de Streaming - Inicio</h1>
-        <nav>
-            <a href="index.html" class="active">Inicio</a>
-            <a href="games.html">Juegos</a>
-            <a href="startStream.html">Iniciar Stream</a>
-            <a href="messages.html">Mensajes Privados</a>
-            <a href="email.html">Enviar Correo</a>
-            <a href="config.html">Configuración</a>
-        </nav>
+        <h1 id="page-main-title">GameHub Local</h1>
+        <nav id="main-navigation-bar">
+            </nav>
     </header>
 
     <main>
-        <h2>¡Bienvenido a la Plataforma de Streaming!</h2>
-        <p id="userInfo"></p>
+        <section class="hero-section">
+            <h2>Welcome to GameHub Local!</h2>
+            <p>Your ultimate destination for local game streaming, mod sharing, and connecting with fellow gamers in our community.</p>
+            <a href="games.html" class="cta-button">Explore Games & Mods</a>
+        </section>
 
-        <div class="button-grid">
-            <a class="boton" href="games.html"><i class="fas fa-gamepad"></i> Ver Juegos</a>
-            <a class="boton" href="startStream.html"><i class="fas fa-video"></i> Iniciar Stream</a>
-            <a class="boton" id="streamLink"><i class="fas fa-broadcast-tower"></i> Ver en Vivo</a>
-            <a class="boton" href="login.html" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</a>
-        </div>
+        <section class="content-section" id="featured-games-section">
+            <h2 class="section-title">Featured Games</h2>
+            <div id="featured-games-grid" class="card-grid">
+                <p class="loading-message">Loading featured games...</p>
+            </div>
+        </section>
+
+        <section class="content-section" id="recent-mods-section">
+            <h2 class="section-title">Latest Mods</h2>
+            <div id="recent-mods-grid" class="card-grid">
+                <p class="loading-message">Loading recent mods...</p>
+            </div>
+        </section>
+
+        <section class="content-section" id="streams-section">
+            <h2 class="section-title">Live Streams</h2>
+            <p class="placeholder-text">Check out who's streaming live right now!</p>
+            <div style="text-align:center; margin-top:1rem;">
+                 <a href="#" id="view-streams-link" class="cta-button" style="background-color: #28a745;">View Live Streams</a>
+            </div>
+        </section>
     </main>
 
+    <footer>
+        <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
+    </footer>
+
     <script>
-        const streamLink = document.getElementById('streamLink');
-        if (window.location.hostname.includes('cetys')) {
-            streamLink.href = 'http://servidor-stream.cetys.local';
-        } else {
-            streamLink.href = 'http://servidor-stream.casa.local';
+        // apiService instance should be globally available
+        const featuredGamesGrid = document.getElementById('featured-games-grid');
+        const recentModsGrid = document.getElementById('recent-mods-grid');
+        const viewStreamsLink = document.getElementById('view-streams-link');
+
+        function createGameCard(game) {
+            const card = document.createElement('a'); // Enlace a la página de detalles del juego
+            card.href = `games.html#game-${game.id}`; // Enlace a games.html y podrías usar JS allí para ir a ese juego
+            card.className = 'item-card';
+            card.innerHTML = `
+                <img src="${game.cover_image_url || 'images/placeholder_game.png'}" alt="Cover for ${game.name}" class="card-cover">
+                <div class="item-card-content">
+                    <h3>${game.name}</h3>
+                    <p>${(game.description || 'No description available.').substring(0, 100) + ( (game.description && game.description.length > 100) ? '...' : '')}</p>
+                </div>
+            `;
+            return card;
         }
 
-        const authToken = localStorage.getItem('authToken');
-        const userInfo = document.getElementById('userInfo');
-        const loginBtn = document.getElementById('loginBtn');
+        function createModCard(mod) {
+            const gameModUrl = `games.html#game-${mod.game_id}`;
+            const card = document.createElement('a');
+            card.href = gameModUrl;
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-card-content">
+                    <h3>${mod.mod_name}</h3>
+                    <p class="game-for-mod">For: ${mod.game_name}</p>
+                    <p>${(mod.mod_description || 'No description available.').substring(0, 100) + ((mod.mod_description && mod.mod_description.length > 100) ? '...' : '')}</p>
+                    <p><small>By: ${mod.uploaded_by_username || 'Unknown'} on ${new Date(mod.upload_date).toLocaleDateString('en-US')}</small></p>
+                </div>
+            `;
+            // Opcional: Si quieres una imagen placeholder para todos los mods:
+            // card.insertAdjacentHTML('afterbegin', '<img src="images/placeholder_mod.png" alt="Mod Icon" class="card-cover">');
 
-        function updateNavBasedOnAuth() {
-            if (authToken) {
-                userInfo.textContent = '¡Bienvenido! Sesión iniciada.';
-                loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Cerrar Sesión';
-                loginBtn.href = '#logout';
-                loginBtn.onclick = () => {
-                    localStorage.removeItem('authToken');
-                    window.location.reload();
-                };
-            } else {
-                userInfo.textContent = 'No has iniciado sesión.';
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-                loginBtn.href = 'login.html';
-                loginBtn.onclick = null;
+            return card;
+        }
+
+        async function loadFeaturedGames() {
+            try {
+                const games = await apiService.getAllGames();
+                featuredGamesGrid.innerHTML = '';
+                if (games && games.length > 0) {
+                    // Mostrar, por ejemplo, los primeros 3 o 4
+                    games.slice(0, 4).forEach(game => {
+                        featuredGamesGrid.appendChild(createGameCard(game));
+                    });
+                } else {
+                    featuredGamesGrid.innerHTML = '<p class="placeholder-text">No games featured at the moment.</p>';
+                }
+            } catch (error) {
+                console.error("Error loading featured games:", error);
+                featuredGamesGrid.innerHTML = '<p class="status-error">Could not load featured games.</p>';
             }
         }
 
-        updateNavBasedOnAuth();
-
-        const storedColor = localStorage.getItem('themeColor');
-        if (storedColor) {
-            document.body.style.backgroundColor = storedColor;
+        async function loadRecentMods() {
+            try {
+                const mods = await apiService.getRecentMods(4);
+                
+                recentModsGrid.innerHTML = '';
+                if (mods && mods.length > 0) {
+                    mods.forEach(mod => {
+                        recentModsGrid.appendChild(createModCard(mod));
+                    });
+                } else {
+                    recentModsGrid.innerHTML = '<p class="placeholder-text">No recent mods to display.</p>';
+                }
+            } catch (error) {
+                console.error("Error loading recent mods:", error);
+                recentModsGrid.innerHTML = '<p class="status-error">Could not load recent mods.</p>';
+            }
         }
+        
+        function setupStreamLink() {
+            const currentHostname = window.location.hostname;
+            let streamDomain = 'servidor-stream.casa.local';
+            if (currentHostname.includes('cetys.local')) {
+                streamDomain = 'servidor-stream.cetys.local';
+            }
+            viewStreamsLink.href = `http://${streamDomain}/`; // O `http://${streamDomain}/index.html`
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar(currentPage);
+            } else {
+                console.error("renderNavigationBar function not found. Make sure navigation.js is loaded.");
+            }
+            // authGuard.js no es necesario para la página de inicio pública generalmente
+
+            loadFeaturedGames();
+            loadRecentMods();
+            setupStreamLink();
+        });
     </script>
 </body>
 </html>
