@@ -1,5 +1,3 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\BaseApiService.js
-
 class BaseApiService {
     constructor(baseUrl = '/api') {
         if (this.constructor === BaseApiService) {

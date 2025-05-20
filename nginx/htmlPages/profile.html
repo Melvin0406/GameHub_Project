@@ -180,14 +180,8 @@
                 pageMainTitle.textContent = `${currentUserData.username}'s Profile`; // English
                 
                 if (currentUserData.profile_image_url) {
-                    // currentUserData.profile_image_url DEBERÍA ser una cadena como "/profile_pics/user_2.jpg"
-                    const imageUrl = currentUserData.profile_image_url.startsWith('http') 
-                                ? currentUserData.profile_image_url 
-                                : `http://localhost:3000${currentUserData.profile_image_url}`;
-                    console.log("Loading profile picture from (loadProfileData):", imageUrl);
-                    profilePictureImg.src = imageUrl;
+                    profilePictureImg.src = currentUserData.profile_image_url;
                 } else {
-                    console.log("No profile_image_url found for user, using default.");
                     profilePictureImg.src = 'images/default_avatar.png'; 
                 }
                 
@@ -282,15 +276,10 @@
             try {
                 const result = await apiService.uploadProfilePicture(formData);
                 
-                const newImageUrl = result.profile_image_url.startsWith('http') 
-                                    ? result.profile_image_url 
-                                    : `http://localhost:3000${result.profile_image_url}`; // Correcto
-                console.log("Setting new profile picture src (after upload):", newImageUrl);
-                profilePictureImg.src = newImageUrl;
+                profilePictureImg.src = result.profile_image_url;
                 
-                // Actualizar currentUserData local si lo estás usando para otras cosas en la página
-                if(currentUserData) {
-                    currentUserData.profile_image_url = result.profile_image_url; // Guarda la ruta relativa
+                if(currentUserData) { // Actualiza la data local si la usas
+                    currentUserData.profile_image_url = result.profile_image_url;
                     localStorage.setItem('currentUserGameHub', JSON.stringify(currentUserData));
                 }
             } catch (error) {
