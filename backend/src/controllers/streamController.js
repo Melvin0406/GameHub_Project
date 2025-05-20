@@ -40,3 +40,16 @@ exports.getMyLiveStatus = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.getStreamInfoByKey = async (req, res, next) => {
+    try {
+        const streamKey = req.params.streamKey;
+        if (!streamKey) {
+            return res.status(400).json({ message: "Stream key is required." });
+        }
+        const info = await streamService.getPublicStreamInfo(streamKey);
+        res.json(info);
+    } catch (error) {
+        next(error);
+    }
+};

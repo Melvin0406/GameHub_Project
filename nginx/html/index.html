@@ -182,6 +182,10 @@
     </footer>
 
     <script>
+        const streamTitleElement = document.getElementById('stream-title');
+        const streamerNameSpan = document.getElementById('streamerNameSpan');
+        const gameNameSpan = document.getElementById('gameNameSpan');
+        
         // Inicializar navegación común
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -226,65 +230,134 @@
         // Idealmente, la streamKey (ej. 'test') vendría de un parámetro URL
         // Por ejemplo: view_stream.html?key=nombreDelStreamer
         const urlParams = new URLSearchParams(window.location.search);
-        const streamKey = urlParams.get('key') || 'test'; // 'test' es el default si no hay parámetro 'key'
+        const streamKey = urlParams.get('key');
 
-        const hlsSourceUrl = `${streamBaseUrl}/hls/${streamKey}.m3u8`;
+        let hlsSourceUrl = '';
         console.log("Attempting to load HLS stream from:", hlsSourceUrl);
 
-        document.getElementById('stream-title').textContent = `Streaming: ${streamKey}`; // Título simple
+        async function loadStreamPageContent() {
+            if (!streamKey) {
+                streamTitleElement.textContent = "No Stream Key Provided";
+                streamerNameSpan.textContent = "N/A";
+                gameNameSpan.textContent = "N/A";
+                alert("No stream key specified in the URL. Cannot load stream information.");
+                // Podrías ocultar el reproductor de video o mostrar un mensaje más prominente
+                document.getElementById('video-player-container').innerHTML = '<p style="color:white; text-align:center; padding-top:20%;">Please specify a stream key in the URL (e.g., ?key=your_stream_key)</p>';
+                return;
+            }
 
+            // Establecer un título temporal mientras se carga la info
+            streamTitleElement.textContent = `Loading Stream: ${streamKey}...`;
+            hlsSourceUrl = `${streamBaseUrl}/hls/${streamKey}.m3u8`; // URL para el video
 
-        if (Hls.isSupported()) {
-            hlsPlayer = new Hls({
-                // Configuraciones opcionales de Hls.js
-                // capLevelToPlayerSize: true, // Ajusta la calidad al tamaño del reproductor
-                // abrMaxBitrate: 4000000, // Límite máximo de bitrate para ABR
-            });
-            hlsPlayer.loadSource(hlsSourceUrl);
-            hlsPlayer.attachMedia(videoElement);
-            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
-                console.log("HLS.js: Manifest parsed, attempting to play.");
-                videoElement.play().catch(error => {
-                    console.warn("Autoplay was prevented:", error.message, "User interaction might be required to start playback.");
-                    // Algunos navegadores bloquean autoplay con sonido. 'muted' en el tag <video> ayuda.
-                });
-            });
-            hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
-                console.error('HLS.js Error:', data.type, '-', data.details, '- Fatal:', data.fatal);
-                if (data.fatal) {
-                    switch(data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.error("Fatal network error encountered, trying to recover...");
-                            // hlsPlayer.startLoad(); // Intenta reiniciar la carga
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.error("Fatal media error encountered, trying to recover...");
-                            // hlsPlayer.recoverMediaError(); // Intenta recuperar
-                            break;
-                        default:
-                            // No se puede recuperar, destruir HLS.js
-                            // hlsPlayer.destroy();
-                            alert(`Cannot load stream: ${data.details}. Please check the stream source or try again later.`);
-                            break;
-                    }
+            try {
+                // Obtener información del stream desde el backend
+                const streamInfo = await apiService.getStreamInfo(streamKey);
+
+                if (streamInfo) {
+                    streamTitleElement.textContent = streamInfo.title || `${streamInfo.streamer_username}'s Stream`;
+                    streamerNameSpan.textContent = streamInfo.streamer_username || "Unknown Streamer";
+                    gameNameSpan.textContent = streamInfo.game_name || "Not Specified";
+                    // Si tuvieras un <img> para la foto de perfil del streamer:
+                    // if (streamInfo.streamer_profile_image_url) {
+                    //     streamerProfilePicElement.src = streamInfo.streamer_profile_image_url.startsWith('http') 
+                    //                                   ? streamInfo.streamer_profile_image_url 
+                    //                                   : `http://localhost:3000${streamInfo.streamer_profile_image_url}`;
+                    // } else {
+                    //     streamerProfilePicElement.src = 'js/default_avatar.png'; // Asumiendo que tienes una imagen default en html/js/
+                    // }
+                } else {
+                    // Esto no debería pasar si getStreamInfo lanza error en 404, pero por si acaso
+                    streamTitleElement.textContent = `Stream: ${streamKey} (Info not found)`;
+                    streamerNameSpan.textContent = "Unknown";
+                    gameNameSpan.textContent = "Unknown";
                 }
-            });
-        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-            // Navegadores con soporte HLS nativo (ej. Safari)
-            videoElement.src = hlsSourceUrl;
-            videoElement.addEventListener('loadedmetadata', function() {
-                console.log("Native HLS: Metadata loaded, attempting to play.");
-                videoElement.play().catch(error => {
-                     console.warn("Autoplay was prevented (native HLS):", error.message);
-                });
-            });
-            videoElement.addEventListener('error', function(e) {
-                console.error('Native HLS Error:', e);
-                alert("Cannot load stream. Please check the stream source or try again later.");
-            });
-        } else {
-            alert("Sorry, your browser does not support HLS streaming.");
+
+                // Ahora que tenemos la info (o lo intentamos), inicializamos el player
+                initializeHlsPlayer();
+
+            } catch (error) {
+                console.error("Error fetching stream info:", error);
+                streamTitleElement.textContent = `Stream: ${streamKey} (Error: ${error.message})`;
+                streamerNameSpan.textContent = "Error";
+                gameNameSpan.textContent = "Error";
+                // Opcional: No intentar cargar el video si la info del stream falla
+                // document.getElementById('video-player-container').innerHTML = `<p style="color:red; text-align:center; padding-top:20%;">Could not load stream info: ${error.message}</p>`;
+                // O intentar cargar el video de todas formas:
+                initializeHlsPlayer();
+            }
         }
+
+        function initializeHlsPlayer() {
+            if (!hlsSourceUrl) {
+                console.error("HLS Source URL is not set. Cannot initialize player.");
+                return;
+            }
+            console.log("Attempting to load HLS stream from:", hlsSourceUrl);
+
+            if (Hls.isSupported()) {
+                hlsPlayer = new Hls({
+                    // Configuraciones opcionales de Hls.js
+                    // capLevelToPlayerSize: true, // Ajusta la calidad al tamaño del reproductor
+                    // abrMaxBitrate: 4000000, // Límite máximo de bitrate para ABR
+                });
+                hlsPlayer.loadSource(hlsSourceUrl);
+                hlsPlayer.attachMedia(videoElement);
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log("HLS.js: Manifest parsed, attempting to play.");
+                    videoElement.play().catch(error => {
+                        console.warn("Autoplay was prevented:", error.message, "User interaction might be required to start playback.");
+                        // Algunos navegadores bloquean autoplay con sonido. 'muted' en el tag <video> ayuda.
+                    });
+                });
+                hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
+                    console.error('HLS.js Error:', data.type, '-', data.details, '- Fatal:', data.fatal);
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.error("Fatal network error encountered, trying to recover...");
+                                // hlsPlayer.startLoad(); // Intenta reiniciar la carga
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.error("Fatal media error encountered, trying to recover...");
+                                // hlsPlayer.recoverMediaError(); // Intenta recuperar
+                                break;
+                            default:
+                                // No se puede recuperar, destruir HLS.js
+                                // hlsPlayer.destroy();
+                                alert(`Cannot load stream: ${data.details}. Please check the stream source or try again later.`);
+                                break;
+                        }
+                    }
+                });
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                // Navegadores con soporte HLS nativo (ej. Safari)
+                videoElement.src = hlsSourceUrl;
+                videoElement.addEventListener('loadedmetadata', function() {
+                    console.log("Native HLS: Metadata loaded, attempting to play.");
+                    videoElement.play().catch(error => {
+                        console.warn("Autoplay was prevented (native HLS):", error.message);
+                    });
+                });
+                videoElement.addEventListener('error', function(e) {
+                    console.error('Native HLS Error:', e);
+                    alert("Cannot load stream. Please check the stream source or try again later.");
+                });
+            } else {
+                alert("Sorry, your browser does not support HLS streaming.");
+            }
+        }
+
+        // Llama a loadStreamPageContent en DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            if (typeof renderNavigationBar === 'function') {
+                // Pasamos 'view_stream.html' como identificador conceptual para que la nav se marque activa
+                renderNavigationBar('view_stream.html'); 
+            } else { /* ... error ... */ }
+
+            loadStreamPageContent();
+        });
 
         // Limpiar HLS player al salir de la página (opcional pero buena práctica)
         window.addEventListener('beforeunload', () => {

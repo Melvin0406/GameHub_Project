@@ -68,3 +68,25 @@ exports.getAllActiveStreams = () => {
         });
     });
 };
+
+exports.findActiveStreamByStreamKey = (streamKey) => {
+    return new Promise((resolve, reject) => {
+        // Unimos con users para obtener también el username del streamer
+        const sql = `
+            SELECT 
+                ls.title, ls.game_name, ls.started_at, ls.user_id,
+                u.username as streamer_username, u.profile_image_url as streamer_profile_image_url 
+            FROM live_streams ls
+            JOIN users u ON ls.user_id = u.id
+            WHERE ls.stream_key = ?
+        `;
+        db.get(sql, [streamKey], (err, row) => {
+            if (err) {
+                console.error("Error in liveStreamRepository.findActiveStreamByStreamKey:", err.message);
+                reject(new Error("Error fetching active stream by stream key."));
+            } else {
+                resolve(row); // Devuelve la fila del stream o undefined si no está activo
+            }
+        });
+    });
+};

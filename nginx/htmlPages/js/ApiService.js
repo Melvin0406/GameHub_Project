@@ -117,6 +117,10 @@ class ApiService extends BaseApiService {
     async getMyLiveStatus() {
         return this._request('/streams/me/status', 'GET', null, true);
     }
+
+    async getStreamInfo(streamKey) {
+        return this._request(`/streams/info/${streamKey}`, 'GET', null, false);
+    }
 }
 
 // Instancia global
