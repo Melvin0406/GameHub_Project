@@ -61,3 +61,24 @@ exports.setProfilePicture = async (userId, fileFromMulter) => {
 
     return { message: 'Profile picture updated successfully.', profile_image_url: publicImageUrl };
 };
+
+exports.getUserStreamInfo = async (userId) => {
+    const user = await userRepository.findUserById(userId); // Ya selecciona stream_key
+    if (!user || !user.stream_key) {
+        const error = new Error('Stream information not found or stream key not set for user.');
+        error.statusCode = 404;
+        throw error;
+    }
+    // La URL RTMP base (el usuario añade su stream_key al final en OBS)
+    // Asumimos que usas la aplicación 'hls' de tu nginx-rtmp para HLS output.
+    // Si usas 'live' para que la gente transmita y luego Nginx lo convierte a HLS, ajusta esto.
+    const rtmpBaseUrl = `rtmp://${process.env.STREAM_DOMAIN || 'servidor-stream.casa.local'}/hls`; 
+    // Nota: STREAM_DOMAIN podría ser una variable en .env si quieres que sea configurable.
+    // Si tus dos dominios (casa y cetys) son fijos, puedes hardcodear uno o añadir lógica.
+    // Por simplicidad, usaremos servidor-stream.casa.local como default si no está en .env.
+
+    return {
+        rtmp_url: rtmpBaseUrl, // A esta URL el usuario añade /STREAM_KEY en OBS
+        stream_key: user.stream_key
+    };
+};

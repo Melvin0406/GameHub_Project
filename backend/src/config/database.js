@@ -129,6 +129,7 @@ function createUsersTable() {
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 profile_image_url TEXT,
+                stream_key TEXT UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
     `;

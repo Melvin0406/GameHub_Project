@@ -24,3 +24,12 @@ exports.uploadProfilePicture = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.getMyStreamInfo = async (req, res, next) => {
+    try {
+        const streamInfo = await userService.getUserStreamInfo(req.user.id);
+        res.json(streamInfo);
+    } catch (error) {
+        next(error);
+    }
+};

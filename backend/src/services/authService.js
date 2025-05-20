@@ -2,6 +2,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository'); // Usamos el repositorio
+const crypto = require('crypto');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.registerUser = async ({ username, email, password }) => {
@@ -34,13 +35,16 @@ exports.registerUser = async ({ username, email, password }) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 4. Lógica de negocio: Crear usuario (usando el repositorio)
-    const newUser = await userRepository.createUser(username, email, passwordHash);
+    // Generar una stream key única
+    const streamKey = crypto.randomBytes(8).toString('hex'); // Genera 16 caracteres hexadecimales
 
-    // 5. Devolver resultado para el controlador
+    // Modificar userRepository.createUser para aceptar y guardar streamKey
+    const newUser = await userRepository.createUser(username, email, passwordHash, streamKey); 
+
     return { 
-        message: 'Usuario registrado exitosamente.', 
-        user: { id: newUser.id, username: newUser.username, email: newUser.email } 
+        message: 'User registered successfully.', 
+        user: { id: newUser.id, username: newUser.username, email: newUser.email }
+        // No devolvemos la stream key aquí, se obtendrá desde otro endpoint
     };
 };
 
