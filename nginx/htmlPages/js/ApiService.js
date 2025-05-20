@@ -101,6 +101,22 @@ class ApiService extends BaseApiService {
     async getMyStreamInfo() {
         return this._request('/users/me/stream-info', 'GET', null, true);
     }
+
+    async getLiveStreams() {
+        return this._request('/streams/live', 'GET', null, false); // No requiere auth para ver
+    }
+
+    async goLive(streamDetails) { // streamDetails = { title, gameName }
+        return this._request('/streams/go-live', 'POST', streamDetails, true);
+    }
+
+    async goOffline() {
+        return this._request('/streams/go-offline', 'POST', null, true);
+    }
+
+    async getMyLiveStatus() {
+        return this._request('/streams/me/status', 'GET', null, true);
+    }
 }
 
 // Instancia global
