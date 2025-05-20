@@ -4,50 +4,49 @@ function renderNavigationBar(currentPageFileName) {
     const mainNavBarElement = document.getElementById('main-navigation-bar');
     
     if (!mainNavBarElement) {
-        console.error("Error: Navigation bar element with ID 'main-navigation-bar' not found.");
+        console.error("Error: Navigation bar element with ID 'main-navigation-bar' not found in the current page.");
         return;
     }
 
-    const authToken = localStorage.getItem('authToken');
+    const authToken = localStorage.getItem('authToken'); // Token del localStorage del DOMINIO ACTUAL
     const currentHostname = window.location.hostname; 
 
     let mainAppDomain = 'servidor-juego.casa.local'; 
-    let streamDomain = 'servidor-stream.casa.local'; 
+    let streamViewingDomain = 'servidor-stream.casa.local'; // Dominio donde se ven los streams individuales
 
     if (currentHostname.includes('cetys.local')) {
         mainAppDomain = 'servidor-juego.cetys.local';
-        streamDomain = 'servidor-stream.cetys.local';
+        streamViewingDomain = 'servidor-stream.cetys.local';
     }
     
-    // URLs absolutas para los enlaces principales
+    // URLs absolutas para los enlaces principales que residen en el mainAppDomain
     const homeUrl = `http://${mainAppDomain}/index.html`;
     const gamesUrl = `http://${mainAppDomain}/games.html`;
+    const liveStreamsListUrl = `http://${mainAppDomain}/live_streams.html`; // "View Streams" apunta a la lista
     const chatUrl = `http://${mainAppDomain}/chat.html`;
     const profileUrl = `http://${mainAppDomain}/profile.html`;
-    const startStreamUrl = `http://${mainAppDomain}/start_stream.html`; // <<< NUEVA URL
+    const startStreamUrl = `http://${mainAppDomain}/start_stream.html`; 
 
-    const viewStreamPageUrl = `http://${streamDomain}/`; 
+    // Lógica para la clase 'active'
+    // "View Streams" se considera la sección activa si estamos en la lista de streams
+    // o si estamos viendo un stream individual (que es index.html en el streamViewingDomain).
+    const isViewingStreamSectionActive = 
+        (currentPageFileName === 'live_streams.html') || // Cuando estamos en la página de lista de streams
+        (currentHostname === streamViewingDomain && (currentPageFileName === 'index.html' || currentPageFileName === 'view_stream.html')); // Cuando estamos viendo un stream (pasando 'view_stream.html' como conceptual)
 
-    const isStreamPageActive = (currentPageFileName === 'view_stream.html') || 
-                               (currentHostname === streamDomain && (currentPageFileName === 'index.html' || currentPageFileName === ''));
 
-    // Construir el HTML de la navegación
-    // El orden de los enlaces puede ser el que prefieras
     let navHtml = `
-        <a href="${homeUrl}" class="${currentPageFileName === 'index.html' && currentHostname.startsWith('servidor-juego') ? 'active' : ''}">Home</a>
+        <a href="${homeUrl}" class="${(currentPageFileName === 'index.html' && currentHostname.startsWith('servidor-juego')) ? 'active' : ''}">Home</a>
         <a href="${gamesUrl}" class="${currentPageFileName === 'games.html' ? 'active' : ''}">Games & Mods</a>
-        <a href="${viewStreamPageUrl}" class="${isStreamPageActive ? 'active' : ''}" title="Go to Live Stream Page">View Stream</a>
+        <a href="${liveStreamsListUrl}" class="${isViewingStreamSectionActive ? 'active' : ''}" title="View All Live Streams">View Streams</a>
     `;
 
     if (authToken) {
-        // Enlaces solo para usuarios logueados
-        navHtml += `<a href="${startStreamUrl}" class="${currentPageFileName === 'start_stream.html' ? 'active' : ''}">Start Stream</a>`; // <<< ENLACE AÑADIDO
+        navHtml += `<a href="${startStreamUrl}" class="${currentPageFileName === 'start_stream.html' ? 'active' : ''}">Start Stream</a>`;
         navHtml += `<a href="${chatUrl}" class="${currentPageFileName === 'chat.html' ? 'active' : ''}">Chat</a>`;
         navHtml += `<a href="${profileUrl}" class="${currentPageFileName === 'profile.html' ? 'active' : ''}">Profile</a>`;
         navHtml += `<a href="#" id="logout-link" style="color: #ff6b6b;">Logout</a>`;
     } else {
-        // Enlaces para usuarios no logueados (Chat y Profile no se muestran o redirigen con authGuard)
-        // View Stream y Games & Mods pueden ser públicos.
         const loginUrl = `http://${mainAppDomain}/login.html`;
         const signupUrl = `http://${mainAppDomain}/signup.html`;
         navHtml += `<a href="${loginUrl}" class="${currentPageFileName === 'login.html' ? 'active' : ''}">Login</a>`;
@@ -66,6 +65,7 @@ function renderNavigationBar(currentPageFileName) {
                 
                 const currentPageAfterLogout = window.location.pathname.split('/').pop() || 'index.html';
                 renderNavigationBar(currentPageAfterLogout); 
+                
                 window.location.href = `http://${mainAppDomain}/login.html`; 
             });
         }
