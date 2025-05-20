@@ -95,7 +95,7 @@ class ApiService extends BaseApiService {
     }
 
     async getRecentMods(limit = 4) {
-        return this._request(`/games/mods/recent?limit=${limit}`, 'GET', null, true);
+        return this._request(`/games/mods/recent?limit=${limit}`, 'GET', null, false);
     }
 
     async getMyStreamInfo() {
