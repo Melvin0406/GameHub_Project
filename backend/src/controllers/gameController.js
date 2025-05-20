@@ -123,3 +123,16 @@ exports.updateModDetails = async (req, res, next) => {
         next(error); // Pasa al manejador de errores global
     }
 };
+
+exports.getRecentMods = async (req, res, next) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit, 10) : 5;
+        if (isNaN(limit) || limit <= 0) {
+            return res.status(400).json({ message: "Invalid limit parameter." });
+        }
+        const mods = await gameService.getRecentMods(limit);
+        res.json(mods);
+    } catch (error) {
+        next(error);
+    }
+};

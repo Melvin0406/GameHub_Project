@@ -18,6 +18,9 @@ const upload = multer({
 router.get('/', gameController.getAllGames); // Listar todos los juegos
 router.get('/:gameId', gameController.getGameByIdWithMods); // Detalles de un juego y sus mods
 
+router.get('/mods/recent', gameController.getRecentMods); // GET /api/games/mods/recent
+module.exports = router;
+
 // Ruta protegida para subir un mod a un juego específico
 // authMiddleware: asegura que el usuario esté logueado
 // upload.single('modFile'): procesa un único archivo que venga en el campo 'modFile' del formulario FormData
