@@ -93,6 +93,10 @@ class ApiService extends BaseApiService {
     async getChatHistory(friendId) {
         return this._request(`/chat/history/${friendId}`, 'GET', null, true);
     }
+
+    async getRecentMods(limit = 4) {
+        return this._request(`/games/mods/recent?limit=${limit}`, 'GET', null, true);
+    }
 }
 
 // Instancia global
