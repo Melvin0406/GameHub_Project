@@ -1,29 +1,58 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\navigation.js
-
 function renderNavigationBar(currentPageFileName) {
-    // Obtener el elemento de la barra de navegación DENTRO de la función
-    const mainNavBarElement = document.getElementById('main-navigation-bar'); // ID que definimos en el HTML
+    const mainNavBarElement = document.getElementById('main-navigation-bar');
     
     if (!mainNavBarElement) {
-        console.error("Error: Elemento con ID 'main-navigation-bar' no encontrado en la página.");
-        return; // Salir si no se encuentra el contenedor de la nav
+        console.error("Error: Navigation bar element with ID 'main-navigation-bar' not found.");
+        return;
     }
 
     const authToken = localStorage.getItem('authToken');
+    const currentHostname = window.location.hostname; // ej: servidor-juego.casa.local o servidor-stream.cetys.local
+
+    let mainAppDomain = 'servidor-juego.casa.local'; // Dominio principal por defecto
+    let streamDomain = 'servidor-stream.casa.local'; // Dominio de stream por defecto
+
+    if (currentHostname.includes('cetys.local')) {
+        mainAppDomain = 'servidor-juego.cetys.local';
+        streamDomain = 'servidor-stream.cetys.local';
+    }
+    
+    // URLs absolutas para los enlaces principales
+    const homeUrl = `http://${mainAppDomain}/index.html`;
+    const gamesUrl = `http://${mainAppDomain}/games.html`;
+    const chatUrl = `http://${mainAppDomain}/chat.html`;
+    const profileUrl = `http://${mainAppDomain}/profile.html`;
+    // const startStreamUrl = `http://${mainAppDomain}/startStream.html`; // Si lo añades
+
+    // Lógica para la clase 'active'
+    // currentPageFileName sigue siendo el nombre base del archivo (ej. 'index.html', 'games.html')
+    // Para 'View Stream', lo consideramos activo si estamos en el dominio de stream Y la página es el index.html,
+    // O si conceptualmente la página actual se llama 'view_stream.html' (útil si tuvieras un placeholder).
+    const isStreamPageActive = (currentPageFileName === 'view_stream.html') || 
+        (currentHostname === streamDomain && (currentPageFileName === 'index.html' || currentPageFileName === ''));
+    
+        let viewStreamUrl = `http://${streamDomain}/`;
+        if (authToken) {
+            viewStreamUrl += `?authToken=${encodeURIComponent(authToken)}`;
+        }
+
+
     let navHtml = `
-        <a href="index.html" class="${currentPageFileName === 'index.html' ? 'active' : ''}">Home</a>
-        <a href="games.html" class="${currentPageFileName === 'games.html' ? 'active' : ''}">Games & Mods</a>
-        <a href="view_stream.html" class="${currentPageFileName === 'view_stream.html' ? 'active' : ''}">View Stream</a>
-        <a href="chat.html" class="${currentPageFileName === 'chat.html' ? 'active' : ''}">Chat</a>
-        <a href="profile.html" class="${currentPageFileName === 'profile.html' ? 'active' : ''}">Profile</a>
+        <a href="${homeUrl}" class="${currentPageFileName === 'index.html' && currentHostname.startsWith('servidor-juego') ? 'active' : ''}">Home</a>
+        <a href="${gamesUrl}" class="${currentPageFileName === 'games.html' ? 'active' : ''}">Games & Mods</a>
+        <a href="${viewStreamUrl}" class="${isStreamPageActive ? 'active' : ''}" title="Go to Live Stream Page">View Stream</a>
+        <a href="${chatUrl}" class="${currentPageFileName === 'chat.html' ? 'active' : ''}">Chat</a>
+        <a href="${profileUrl}" class="${currentPageFileName === 'profile.html' ? 'active' : ''}">Profile</a>
     `;
 
     if (authToken) {
-        // navHtml += `<a href="startStream.html" class="${currentPageFileName === 'startStream.html' ? 'active' : ''}">Start Stream</a>`;
-        navHtml += `<a href="#" id="logout-link" style="color: #ff6b6b;">Logout</a>`; // Estilo directo o clase CSS
+        // if (startStreamUrl) navHtml += `<a href="${startStreamUrl}" class="${currentPageFileName === 'startStream.html' ? 'active' : ''}">Start Stream</a>`;
+        navHtml += `<a href="#" id="logout-link" style="color: #ff6b6b;">Logout</a>`;
     } else {
-        navHtml += `<a href="login.html" class="${currentPageFileName === 'login.html' ? 'active' : ''}">Login</a>`;
-        navHtml += `<a href="signup.html" class="${currentPageFileName === 'signup.html' ? 'active' : ''}">Sign Up</a>`;
+        const loginUrl = `http://${mainAppDomain}/login.html`;
+        const signupUrl = `http://${mainAppDomain}/signup.html`;
+        navHtml += `<a href="${loginUrl}" class="${currentPageFileName === 'login.html' ? 'active' : ''}">Login</a>`;
+        navHtml += `<a href="${signupUrl}" class="${currentPageFileName === 'signup.html' ? 'active' : ''}">Sign Up</a>`;
     }
     mainNavBarElement.innerHTML = navHtml;
 
@@ -35,9 +64,12 @@ function renderNavigationBar(currentPageFileName) {
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentUserGameHub'); 
                 alert("You have been logged out.");
-                // Re-renderiza la nav para mostrar Login/Signup después del alert y antes de la redirección
-                renderNavigationBar(currentPageFileName); 
-                window.location.href = 'login.html'; // Redirige a login después de cerrar sesión
+                
+                const currentPageAfterLogout = window.location.pathname.split('/').pop() || 'index.html';
+                // Si estamos en el servidor de stream, igual queremos re-renderizar la nav del main domain conceptualmente
+                renderNavigationBar(currentPageAfterLogout); 
+                
+                window.location.href = `http://${mainAppDomain}/login.html`; // Redirige a login del sitio principal
             });
         }
     }

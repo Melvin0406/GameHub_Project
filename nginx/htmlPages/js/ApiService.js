@@ -89,6 +89,10 @@ class ApiService extends BaseApiService {
     async getPendingFriendRequests() {
         return this._request('/friends/pending', 'GET', null, true);
     }
+
+    async getChatHistory(friendId) {
+        return this._request(`/chat/history/${friendId}`, 'GET', null, true);
+    }
 }
 
 // Instancia global

@@ -101,6 +101,22 @@ function initializeDatabaseTables() {
         db.run(createFriendshipsTableSql, (err) => {
             if (err) console.error('Error creating friendships table:', err.message);
         });
+
+        const createChatMessagesTableSql = `
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_id INTEGER NOT NULL,
+                recipient_id INTEGER NOT NULL,
+                message_text TEXT NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_read BOOLEAN DEFAULT 0, -- Podría ser útil si el destinatario no está online
+                FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE,
+                FOREIGN KEY (recipient_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+        `;
+        db.run(createChatMessagesTableSql, (err) => {
+            if (err) console.error('Error creating chat_messages table:', err.message);
+        });
     });
 }
 

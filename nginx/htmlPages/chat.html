@@ -7,6 +7,7 @@
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
     <script src="js/navigation.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; }
         header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
@@ -122,10 +123,12 @@
         const messageInputArea = document.getElementById('messageInputArea');
         const messageInput = document.getElementById('messageInput');
         const sendMessageButton = document.getElementById('sendMessageButton');
+        const chatPlaceholder = document.getElementById('chatPlaceholder');
 
         let currentChatFriendId = null;
         let currentChatFriendUsername = null;
         let globalCurrentUserData = null; // Store fetched user data
+        let socket = null;
 
         // ---- Helper to display status messages ----
         function displaySearchStatus(message, type = 'info') {
@@ -302,8 +305,95 @@
         }
 
 
-        // ---- Chat Functionality (Basic Placeholder for now) ----
-        function startChatWithFriend(friendId, friendUsername) {
+        // ----------- SOCKET.IO CHAT FUNCTIONALITY -----------
+        function connectSocket() {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                console.error("Socket.IO: No auth token found. Cannot connect.");
+                return;
+            }
+
+            // Conectar al servidor Socket.IO (la URL base de tu backend)
+            // El cliente pasa el token en handshake.auth
+            socket = io({ 
+                auth: { 
+                    token: authToken 
+                } 
+            });
+
+            socket.on('connect', () => {
+                console.log('Socket.IO: Connected to server with ID:', socket.id);
+                if(globalCurrentUserData) {
+                    console.log(`Socket.IO: User ${globalCurrentUserData.username} (ID: ${globalCurrentUserData.id}) authenticated for socket connection.`);
+                }
+            });
+
+            socket.on('connect_error', (err) => {
+                console.error('Socket.IO: Connection Error -', err.message);
+                if (err.message === "Authentication error: Invalid token" || err.message === "Authentication error: No token provided") {
+                    alert("Chat authentication failed. Your session might be invalid. Please re-login.");
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUserGameHub');
+                    window.location.href = 'login.html';
+                }
+            });
+
+            socket.on('new_private_message', (message) => {
+                console.log('Socket.IO: Received new_private_message:', message);
+                // Mostrar el mensaje solo si es para la conversación activa
+                if ((message.sender_id === currentChatFriendId && message.recipient_id === globalCurrentUserData.id) ||
+                    (message.recipient_id === currentChatFriendId && message.sender_id === globalCurrentUserData.id) ) {
+                    appendMessageToDisplay(message, message.sender_id === globalCurrentUserData.id ? 'sent' : 'received');
+                } else {
+                    // Opcional: Mostrar una notificación de nuevo mensaje de otro amigo
+                    console.log(`Received message from/to another user (Sender: ${message.sender_id}, Recipient: ${message.recipient_id}), not displaying in current chat.`);
+                    alert(`New message from ${message.sender_username || 'a user'}!`); // Simple alert
+                }
+            });
+
+            socket.on('message_sent_confirmation', (confirmedMessage) => {
+                console.log('Socket.IO: Message sent confirmed by server:', confirmedMessage);
+                // Si estábamos haciendo una actualización optimista, podríamos actualizar el ID del mensaje
+                // o simplemente confiar en que 'new_private_message' también se emite al remitente.
+                // El backend actual emite 'new_private_message' al destinatario y 'message_sent_confirmation' al remitente.
+                // Para simplificar, si la confirmación es solo para el remitente y no es el mismo evento
+                // que 'new_private_message', y si el remitente es el usuario actual y está en el chat correcto:
+                if (confirmedMessage.sender_id === globalCurrentUserData.id && confirmedMessage.recipient_id === currentChatFriendId) {
+                    // Podrías tener una lógica para reemplazar un mensaje "enviando" con el confirmado,
+                    // o si el 'new_private_message' no se emite al remitente, mostrarlo aquí.
+                    // Por ahora, asumimos que la UI se actualiza bien con la emisión del remitente.
+                }
+            });
+            
+            socket.on('chat_error', (error) => {
+                console.error('Socket.IO: Chat Error from server -', error.message);
+                alert(`Chat Error: ${error.message || 'An unknown error occurred.'}`);
+            });
+
+            socket.on('user_typing', ({ senderId, isTyping }) => {
+                if (senderId === currentChatFriendId) {
+                    chatWithTitle.textContent = isTyping 
+                        ? `Chat with ${currentChatFriendUsername} (typing...)`
+                        : `Chat with ${currentChatFriendUsername}`;
+                }
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log('Socket.IO: Disconnected from server -', reason);
+                // Podrías intentar reconectar o notificar al usuario
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                console.log('Socket.IO: Manually disconnected.');
+            }
+        }
+
+        // ---- Cargar Historial de Chat y Configurar Ventana de Chat ----
+        async function startChatWithFriend(friendId, friendUsername) {
             currentChatFriendId = friendId;
             currentChatFriendUsername = friendUsername;
             chatWithTitle.textContent = `Chat with ${friendUsername}`;
@@ -311,33 +401,88 @@
             messageInputArea.style.display = 'flex';
             messageInput.value = '';
             messageInput.focus();
-            // TODO: Implement fetching chat history: await apiService._request(`/api/chat/${friendId}/history`, 'GET', null, true);
-            // TODO: Implement WebSocket connection for real-time chat
-            // For now, just a placeholder
-            setTimeout(() => {
-                 messagesDisplay.innerHTML = `<p class="placeholder-text">Chat with ${friendUsername} would appear here. Real-time chat via WebSockets is the next step!</p>`;
-            }, 1000);
+            if (chatPlaceholder) chatPlaceholder.style.display = 'none';
+
+            // Marcar el amigo activo en la lista de amigos
+            document.querySelectorAll('#friendsList li').forEach(li => {
+                li.classList.remove('active-chat');
+                if (li.dataset.friendId == friendId) { // Usar == para comparar string con número si es necesario
+                    li.classList.add('active-chat');
+                }
+            });
+
+            try {
+                // Usar ApiService para obtener el historial
+                const history = await apiService.getChatHistory(friendId);
+                messagesDisplay.innerHTML = ''; // Limpiar "Loading..."
+                if (history && history.length > 0) {
+                    history.forEach(msg => {
+                        appendMessageToDisplay(msg, msg.sender_id === globalCurrentUserData.id ? 'sent' : 'received');
+                    });
+                } else {
+                    messagesDisplay.innerHTML = `<p class="placeholder-text">No messages yet with ${friendUsername}. Start the conversation!</p>`;
+                }
+            } catch (error) {
+                console.error("Error fetching chat history:", error);
+                messagesDisplay.innerHTML = `<p class="placeholder-text" style="color:red;">Error loading chat history: ${error.message}</p>`;
+            }
+        }
+
+        function appendMessageToDisplay(message, type) { // type: 'sent' o 'received'
+            if (!messagesDisplay || !globalCurrentUserData) return;
+            if (chatPlaceholder && chatPlaceholder.parentNode === messagesDisplay) {
+                messagesDisplay.removeChild(chatPlaceholder); // Remover placeholder si es el primer mensaje
+            }
+
+            const msgEl = document.createElement('div');
+            msgEl.classList.add('message', type);
+            
+            // Asumiendo que 'message' tiene 'sender_username', 'message_text', 'timestamp'
+            const senderName = (type === 'sent') ? 'You' : (message.sender_username || 'Friend');
+            
+            msgEl.innerHTML = `
+                <span class="sender-name">${senderName}</span>
+                ${message.message_text.replace(/\n/g, '<br>')}
+                <span class="timestamp">${new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+            `;
+            
+            // Insertar al principio porque usamos flex-direction: column-reverse
+            messagesDisplay.insertBefore(msgEl, messagesDisplay.firstChild);
+            // Para asegurar que se vea el último mensaje (que ahora está arriba visualmente pero al fondo del scroll)
+            messagesDisplay.scrollTop = 0; // Si es column-reverse, el "fondo" es el inicio del scroll
         }
 
         sendMessageButton.addEventListener('click', () => {
             const messageText = messageInput.value.trim();
-            if (messageText && currentChatFriendId) {
-                console.log(`Sending message to ${currentChatFriendUsername} (ID: ${currentChatFriendId}): ${messageText}`);
-                // TODO: Implement sending message via WebSocket
-                // Example: socket.emit('private_message', { recipientId: currentChatFriendId, text: messageText });
+            if (messageText && currentChatFriendId && socket && socket.connected) {
+                const messagePayload = {
+                    recipientId: currentChatFriendId,
+                    text: messageText
+                };
+                socket.emit('private_message', messagePayload);
                 
-                // Simulate sent message
-                const msgEl = document.createElement('div');
-                msgEl.classList.add('message', 'sent');
-                msgEl.textContent = messageText;
-                // messagesDisplay.appendChild(msgEl); // This would add to bottom with normal flex
-                messagesDisplay.insertBefore(msgEl, messagesDisplay.firstChild); // Add to top for column-reverse
-                messagesDisplay.scrollTop = messagesDisplay.scrollHeight; // Scroll to bottom
                 messageInput.value = '';
+                messageInput.focus();
+            } else if (!socket || !socket.connected) {
+                alert("Chat not connected. Please refresh or try again later.");
             }
         });
-        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageButton.click(); }});
 
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessageButton.click();
+            } else if (socket && socket.connected && currentChatFriendId) {
+                // Emitir evento 'typing_indicator'
+                socket.emit('typing_indicator', { recipientId: currentChatFriendId, isTyping: true });
+                // Podrías querer un timeout para emitir isTyping: false si el usuario deja de escribir
+            }
+        });
+        messageInput.addEventListener('blur', () => { // Cuando el usuario deja el input
+            if (socket && socket.connected && currentChatFriendId) {
+                socket.emit('typing_indicator', { recipientId: currentChatFriendId, isTyping: false });
+            }
+        });
 
         // ---- Initialization ----
         async function fetchCurrentUserData() {
@@ -375,9 +520,16 @@
             }
             
             await fetchCurrentUserData(); 
-            if (globalCurrentUserData) { // Solo cargar listas si el usuario está autenticado y sus datos cargados
+            if (globalCurrentUserData) { 
+                connectSocket(); // Conectar a Socket.IO después de tener los datos del usuario
                 loadPendingRequests();
                 loadFriends();
+            } else if (authToken) { // Hay token pero no se pudieron cargar los datos (ej. token expirado)
+                alert("Session invalid or expired. Please log in again.");
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUserGameHub');
+                if (typeof renderNavigationBar === 'function') renderNavigationBar(currentPage); // Actualizar nav
+                window.location.href = 'login.html';
             }
         });
     </script>
