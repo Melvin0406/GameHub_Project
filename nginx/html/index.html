@@ -2,64 +2,324 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Streaming en Vivo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Stream - GameHub Local</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <script src="../htmlPages/js/BaseApiService.js"></script>
+    <script src="../htmlPages/js/ApiService.js"></script>
+    <script src="../htmlPages/js/navigation.js"></script>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #111;
-            color: #fff;
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #18181b; /* Un negro un poco más suave, común en plataformas de streaming */
+            color: #e0e0e0; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header { 
+            background-color: #121212; 
+            color: #fff; 
+            padding: 1rem 0; 
+            text-align: center; 
+            border-bottom: 3px solid #007bff; 
+        }
+        header h1#page-main-title { margin: 0; font-size: 2.2em; }
+        
+        nav#main-navigation-bar { 
+            background-color: #252525; 
+            padding: 0.85rem 0; 
+            text-align: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        nav#main-navigation-bar a { 
+            color: #00aaff; margin: 0 1.2rem; text-decoration: none; 
+            font-weight: bold; font-size: 1.1em; transition: color 0.3s, text-shadow 0.3s; padding: 0.5rem 0;
+        }
+        nav#main-navigation-bar a:hover, 
+        nav#main-navigation-bar a.active { color: #007bff; text-shadow: 0 0 5px rgba(0,123,255,0.7); }
+        nav#main-navigation-bar a#logout-link { color: #ff6b6b; }
+        nav#main-navigation-bar a#logout-link:hover { color: #ff8080; }
+
+        main.stream-container {
+            display: flex;
+            flex-grow: 1;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            max-width: 1600px; /* Ancho máximo para layouts grandes */
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .video-main-content {
+            flex-grow: 1; /* Ocupa el espacio principal */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #video-player-container {
+            width: 100%;
+            background-color: #000;
+            position: relative;
+            /* Para mantener la relación de aspecto 16:9 */
+            padding-top: 56.25%; /* 9 / 16 * 100% */
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        #liveVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px; /* Si el contenedor no tiene overflow:hidden */
+        }
+
+        #stream-info-panel {
+            background-color: #252525;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+        #stream-info-panel h2 { margin-top: 0; color: #00aaff; font-size: 1.5em; }
+        #stream-info-panel p { margin: 0.5rem 0; font-size: 0.95em; }
+
+
+        .chat-sidebar {
+            flex: 0 0 320px; /* Ancho fijo para el chat */
+            background-color: #252525;
+            padding: 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px - 3rem); /* Ajustar según altura de header/footer/padding */
+            min-height: 400px; /* Altura mínima */
+        }
+        .chat-sidebar h3 { margin-top: 0; color: #00aaff; border-bottom: 1px solid #444; padding-bottom: 0.75rem;}
+        .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 1rem; background-color: #1e1e1e; padding: 0.5rem; border-radius: 4px;}
+        .chat-messages p { font-size: 0.9em; margin: 0.5rem 0; }
+        .chat-input input { width: calc(100% - 22px); padding: 0.75rem; border: 1px solid #555; border-radius: 4px; background-color: #383838; color: #e0e0e0; }
+        .chat-input button { width: 100%; padding: 0.75rem; margin-top: 0.5rem; background-color: #007bff; color:white; border:none; border-radius:4px; cursor:pointer; }
+        .chat-input button:hover { background-color: #0056b3; }
+
+
+        .action-buttons-bottom {
             text-align: center;
-            padding: 40px;
-        }
-        video {
-            width: 80%;
-            max-width: 800px;
-            border: 3px solid #444;
-            border-radius: 10px;
-        }
-        .boton {
-            display: inline-block;
             margin-top: 2rem;
-            padding: 0.8rem 1.5rem;
+            padding-bottom: 2rem; /* Espacio antes del footer */
+        }
+        .action-buttons-bottom .button-link {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
             background-color: #007BFF;
             color: white;
             text-decoration: none;
             border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.2s;
         }
-        .boton:hover {
+        .action-buttons-bottom .button-link:hover {
             background-color: #0056b3;
+        }
+
+        footer { 
+            text-align: center; 
+            padding: 1rem 0; 
+            background-color: #121212; 
+            color: #888; 
+            border-top: 1px solid #333;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <h1>Transmisión en Vivo</h1>
-    <video id="video" controls autoplay></video>
+    <header>
+        <h1 id="page-main-title">Live Stream</h1>
+        <nav id="main-navigation-bar">
+            </nav>
+    </header>
+
+    <main class="stream-container">
+        <div class="video-main-content">
+            <div id="video-player-container">
+                <video id="liveVideo" controls autoplay playsinline muted></video>
+                </div>
+            <div id="stream-info-panel">
+                <h2 id="stream-title">Stream Title Placeholder</h2>
+                <p id="streamer-name"><strong>Streamer:</strong> <span id="streamerNameSpan">YourFavoriteStreamer</span></p>
+                <p id="game-being-played"><strong>Game:</strong> <span id="gameNameSpan">Awesome Game Title</span></p>
+                </div>
+        </div>
+
+        <aside class="chat-sidebar">
+            <h3>Stream Chat</h3>
+            <div class="chat-messages" id="streamChatMessages">
+                <p><em>Chat placeholder: Welcome to the stream!</em></p>
+                </div>
+            <div class="chat-input">
+                <input type="text" id="chatMessageInput" placeholder="Say something...">
+                <button id="sendChatMessageButton">Send</button>
+            </div>
+        </aside>
+    </main>
+    
+    <div class="action-buttons-bottom">
+        <a class="button-link" id="backToMainSiteLink" href="#">Back to Main Site</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
+    </footer>
 
     <script>
-        const video = document.getElementById('video');
-        const videoSrc = 'http://servidor-stream.casa.local/hls/test.m3u8';
+        // Inicializar navegación común
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('authToken');
+
+            if (tokenFromUrl) {
+                localStorage.setItem('authToken', tokenFromUrl); // Guarda en el localStorage de servidor-stream...
+                // Limpia la URL para que el token no quede visible
+                const newUrl = window.location.pathname; // Sin query params
+                history.replaceState(null, '', newUrl);
+            }
+
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            if (typeof renderNavigationBar === 'function') {
+                renderNavigationBar('view_stream.html');
+            } else {
+                console.error("renderNavigationBar function not found. Make sure navigation.js and its dependencies are correctly linked and ordered in nginx/html/js/");
+            }
+            // (authGuard.js debería haber corrido si esta página es protegida)
+        });
+
+        const videoElement = document.getElementById('liveVideo');
+        const backToMainSiteLink = document.getElementById('backToMainSiteLink');
+        let hlsPlayer; // Guardar la instancia de HLS para destruirla si es necesario
+
+        // Determinar la URL base del stream y del sitio principal dinámicamente
+        const currentHostname = window.location.hostname;
+        let streamBaseUrl;
+        let mainSiteBaseUrl;
+
+        if (currentHostname.includes('cetys.local')) {
+            streamBaseUrl = 'http://servidor-stream.cetys.local';
+            mainSiteBaseUrl = 'http://servidor-juego.cetys.local';
+        } else { // Asumir casa.local o cualquier otro por defecto
+            streamBaseUrl = 'http://servidor-stream.casa.local';
+            mainSiteBaseUrl = 'http://servidor-juego.casa.local';
+        }
+        
+        backToMainSiteLink.href = mainSiteBaseUrl + '/index.html'; // O a /games.html
+
+        // --- Lógica del Reproductor HLS ---
+        // Idealmente, la streamKey (ej. 'test') vendría de un parámetro URL
+        // Por ejemplo: view_stream.html?key=nombreDelStreamer
+        const urlParams = new URLSearchParams(window.location.search);
+        const streamKey = urlParams.get('key') || 'test'; // 'test' es el default si no hay parámetro 'key'
+
+        const hlsSourceUrl = `${streamBaseUrl}/hls/${streamKey}.m3u8`;
+        console.log("Attempting to load HLS stream from:", hlsSourceUrl);
+
+        document.getElementById('stream-title').textContent = `Streaming: ${streamKey}`; // Título simple
+
 
         if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(videoSrc);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                video.play();
+            hlsPlayer = new Hls({
+                // Configuraciones opcionales de Hls.js
+                // capLevelToPlayerSize: true, // Ajusta la calidad al tamaño del reproductor
+                // abrMaxBitrate: 4000000, // Límite máximo de bitrate para ABR
             });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = videoSrc;
-            video.addEventListener('loadedmetadata', function () {
-                video.play();
+            hlsPlayer.loadSource(hlsSourceUrl);
+            hlsPlayer.attachMedia(videoElement);
+            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+                console.log("HLS.js: Manifest parsed, attempting to play.");
+                videoElement.play().catch(error => {
+                    console.warn("Autoplay was prevented:", error.message, "User interaction might be required to start playback.");
+                    // Algunos navegadores bloquean autoplay con sonido. 'muted' en el tag <video> ayuda.
+                });
+            });
+            hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
+                console.error('HLS.js Error:', data.type, '-', data.details, '- Fatal:', data.fatal);
+                if (data.fatal) {
+                    switch(data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.error("Fatal network error encountered, trying to recover...");
+                            // hlsPlayer.startLoad(); // Intenta reiniciar la carga
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.error("Fatal media error encountered, trying to recover...");
+                            // hlsPlayer.recoverMediaError(); // Intenta recuperar
+                            break;
+                        default:
+                            // No se puede recuperar, destruir HLS.js
+                            // hlsPlayer.destroy();
+                            alert(`Cannot load stream: ${data.details}. Please check the stream source or try again later.`);
+                            break;
+                    }
+                }
+            });
+        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+            // Navegadores con soporte HLS nativo (ej. Safari)
+            videoElement.src = hlsSourceUrl;
+            videoElement.addEventListener('loadedmetadata', function() {
+                console.log("Native HLS: Metadata loaded, attempting to play.");
+                videoElement.play().catch(error => {
+                     console.warn("Autoplay was prevented (native HLS):", error.message);
+                });
+            });
+            videoElement.addEventListener('error', function(e) {
+                console.error('Native HLS Error:', e);
+                alert("Cannot load stream. Please check the stream source or try again later.");
             });
         } else {
-            alert("Tu navegador no soporta HLS");
+            alert("Sorry, your browser does not support HLS streaming.");
         }
-    </script>
 
-    <br>
-    
-    <!-- ✅ Botón para regresar -->
-    <a class="boton" href="http://servidor-juego.casa.local/index.html">Regresar</a>
+        // Limpiar HLS player al salir de la página (opcional pero buena práctica)
+        window.addEventListener('beforeunload', () => {
+            if (hlsPlayer) {
+                hlsPlayer.destroy();
+                console.log("HLS player destroyed.");
+            }
+        });
+
+        // Lógica del Chat de Stream (Placeholder)
+        const sendChatMessageButton = document.getElementById('sendChatMessageButton');
+        const chatMessageInput = document.getElementById('chatMessageInput');
+        const streamChatMessages = document.getElementById('streamChatMessages');
+
+        if (sendChatMessageButton) {
+            sendChatMessageButton.addEventListener('click', () => {
+                const message = chatMessageInput.value.trim();
+                if (message) {
+                    // Aquí iría la lógica para enviar el mensaje vía WebSocket para el chat del stream
+                    console.log(`Stream Chat Message (to send): ${message}`);
+                    const p = document.createElement('p');
+                    p.innerHTML = `<strong>You:</strong> ${message}`; // Simulación
+                    streamChatMessages.appendChild(p);
+                    streamChatMessages.scrollTop = streamChatMessages.scrollHeight; // Auto-scroll
+                    chatMessageInput.value = '';
+                }
+            });
+            chatMessageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessageButton.click();
+                }
+            });
+        }
+
+    </script>
 </body>
 </html>
