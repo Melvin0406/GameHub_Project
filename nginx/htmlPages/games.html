@@ -190,12 +190,11 @@
             if (authToken && !globalCurrentUserData) {
                 try {
                     globalCurrentUserData = await apiService.getMyProfile();
-                    // No es necesario guardar en localStorage aquí si solo lo usamos en esta sesión de página.
                 } catch (error) {
                     console.warn("Could not fetch current user data for games page:", error.message);
                     if (error.status === 401 || error.status === 403) {
                         localStorage.removeItem('authToken');
-                        localStorage.removeItem('currentUserGameHub'); // Limpiar por si acaso
+                        localStorage.removeItem('currentUserGameHub');
                         if (typeof renderNavigationBar === 'function') {
                              renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
                         }
