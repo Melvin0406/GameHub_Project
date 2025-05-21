@@ -121,6 +121,10 @@ class ApiService extends BaseApiService {
     async getStreamInfo(streamKey) {
         return this._request(`/streams/info/${streamKey}`, 'GET', null, false);
     }
+
+    async createGame(gameData) { // gameData = { name, description, cover_image_url, ftp_folder_name }
+        return this._request('/games', 'POST', gameData, true); // true = requiere autenticación
+    }
 }
 
 // Instancia global

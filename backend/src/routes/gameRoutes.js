@@ -31,6 +31,8 @@ router.post(
     gameController.uploadMod
 );
 
+router.post('/', authMiddleware, gameController.createGame);
+
 // NUEVA RUTA para descargar un mod por su ID
 // Usamos :modId como parámetro. No necesita autenticación para descargar por ahora
 router.get('/mods/download/:modId', gameController.downloadModFile);

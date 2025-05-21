@@ -94,140 +94,26 @@
         <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
     </footer>
 
-    <script>
-        // apiService instance should be globally available
-        const featuredGamesGrid = document.getElementById('featured-games-grid');
-        const recentModsGrid = document.getElementById('recent-mods-grid');
-        const liveStreamsGrid = document.getElementById('live-streams-grid');
-
-        function createGameCard(game) {
-            const card = document.createElement('a'); // Enlace a la página de detalles del juego
-            card.href = `games.html#game-${game.id}`; // Enlace a games.html y podrías usar JS allí para ir a ese juego
-            card.className = 'item-card';
-            card.innerHTML = `
-                <img src="${game.cover_image_url || 'images/placeholder_game.png'}" alt="Cover for ${game.name}" class="card-cover">
-                <div class="item-card-content">
-                    <h3>${game.name}</h3>
-                    <p>${(game.description || 'No description available.').substring(0, 100) + ( (game.description && game.description.length > 100) ? '...' : '')}</p>
-                </div>
-            `;
-            return card;
-        }
-
-        function createModCard(mod) {
-            const gameModUrl = `games.html#game-${mod.game_id}`;
-            const card = document.createElement('a');
-            card.href = gameModUrl;
-            card.className = 'item-card';
-            card.innerHTML = `
-                <div class="item-card-content">
-                    <h3>${mod.mod_name}</h3>
-                    <p class="game-for-mod">For: ${mod.game_name}</p>
-                    <p>${(mod.mod_description || 'No description available.').substring(0, 100) + ((mod.mod_description && mod.mod_description.length > 100) ? '...' : '')}</p>
-                    <p><small>By: ${mod.uploaded_by_username || 'Unknown'} on ${new Date(mod.upload_date).toLocaleDateString('en-US')}</small></p>
-                </div>
-            `;
-            // Opcional: Si quieres una imagen placeholder para todos los mods:
-            // card.insertAdjacentHTML('afterbegin', '<img src="images/placeholder_mod.png" alt="Mod Icon" class="card-cover">');
-
-            return card;
-        }
-
-        async function loadFeaturedGames() {
-            try {
-                const games = await apiService.getAllGames();
-                featuredGamesGrid.innerHTML = '';
-                if (games && games.length > 0) {
-                    // Mostrar, por ejemplo, los primeros 3 o 4
-                    games.slice(0, 4).forEach(game => {
-                        featuredGamesGrid.appendChild(createGameCard(game));
-                    });
-                } else {
-                    featuredGamesGrid.innerHTML = '<p class="placeholder-text">No games featured at the moment.</p>';
-                }
-            } catch (error) {
-                console.error("Error loading featured games:", error);
-                featuredGamesGrid.innerHTML = '<p class="status-error">Could not load featured games.</p>';
-            }
-        }
-
-        async function loadRecentMods() {
-            try {
-                const mods = await apiService.getRecentMods(4);
-                
-                recentModsGrid.innerHTML = '';
-                if (mods && mods.length > 0) {
-                    mods.forEach(mod => {
-                        recentModsGrid.appendChild(createModCard(mod));
-                    });
-                } else {
-                    recentModsGrid.innerHTML = '<p class="placeholder-text">No recent mods to display.</p>';
-                }
-            } catch (error) {
-                console.error("Error loading recent mods:", error);
-                recentModsGrid.innerHTML = '<p class="status-error">Could not load recent mods.</p>';
-            }
-        }
-
-        function createStreamCard(stream) {
-            // Construir la URL para ver el stream
-            const currentHostname = window.location.hostname;
-            let streamDomainForViewLink = 'servidor-stream.casa.local';
-            if (currentHostname.includes('cetys.local')) {
-                streamDomainForViewLink = 'servidor-stream.cetys.local';
-            }
-            const viewUrl = `http://${streamDomainForViewLink}/index.html?key=${encodeURIComponent(stream.stream_key)}`;
-
-            const card = document.createElement('a');
-            card.href = viewUrl;
-            card.className = 'item-card stream-card'; // Puedes añadir una clase específica para streams
-            card.target = '_blank'; // Abrir en nueva pestaña
-
-            // Asumimos que stream.profile_image_url es la del streamer
-            // y stream.game_name y stream.title vienen del backend
-            card.innerHTML = `
-                <img src="${stream.profile_image_url || 'images/default_avatar.png'}" alt="${stream.username}'s stream" class="card-cover">
-                <div class="item-card-content">
-                    <h3>${stream.title || `${stream.username}'s Stream`}</h3>
-                    <p>Streamer: ${stream.username}</p>
-                    <p class="game-for-mod">Game: ${stream.game_name || 'Not specified'}</p>
-                    <span style="color:red; font-weight:bold;">🔴 LIVE</span>
-                </div>
-            `;
-            return card;
-        }
-
-        async function loadLiveStreams() {
-            if (!liveStreamsGrid) return; // Salir si el elemento no existe
-            liveStreamsGrid.innerHTML = '<p class="loading-message">Loading live streams...</p>';
-            try {
-                const streams = await apiService.getLiveStreams();
-                liveStreamsGrid.innerHTML = '';
-                if (streams && streams.length > 0) {
-                    streams.forEach(stream => {
-                        liveStreamsGrid.appendChild(createStreamCard(stream));
-                    });
-                } else {
-                    liveStreamsGrid.innerHTML = '<p class="placeholder-text">No one is streaming live right now. Be the first!</p>';
-                }
-            } catch (error) {
-                console.error("Error loading live streams:", error);
-                liveStreamsGrid.innerHTML = '<p class="status-error">Could not load live streams.</p>';
-            }
-        }
-
+    <script src="js/page_managers/HomePageManager.js"></script> <script>
         document.addEventListener('DOMContentLoaded', () => {
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            
             if (typeof renderNavigationBar === 'function') {
                 renderNavigationBar(currentPage);
             } else {
-                console.error("renderNavigationBar function not found. Make sure navigation.js is loaded.");
+                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded before HomePageManager.js.");
             }
-            // authGuard.js no es necesario para la página de inicio pública generalmente
 
-            loadFeaturedGames();
-            loadRecentMods();
-            loadLiveStreams();
+            // authGuard.js no es estrictamente necesario para la página de inicio si es pública,
+            // pero si lo tienes, asegúrate de que esté en el <head>.
+
+            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined') {
+                new HomePageManager(apiService); // Instanciar el manejador de la página de inicio
+            } else {
+                console.error("ApiService is not available. Cannot initialize HomePageManager.");
+                const mainContent = document.querySelector('main');
+                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading page components. Please try again later.</p>';
+            }
         });
     </script>
 </body>

@@ -29,7 +29,32 @@ exports.findGameById = (id) => {
     });
 };
 
-// En el futuro, podrías añadir:
-// exports.createGame = (gameData) => { /* ... */ };
-// exports.updateGame = (id, gameData) => { /* ... */ };
-// exports.deleteGame = (id) => { /* ... */ };
+exports.createGame = ({ name, description, cover_image_url, ftp_folder_name }) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            INSERT INTO games (name, description, cover_image_url, ftp_folder_name)
+            VALUES (?, ?, ?, ?)
+        `;
+        db.run(sql, [name, description, cover_image_url, ftp_folder_name], function(err) {
+            if (err) {
+                // Manejar error de constraint UNIQUE (para name y ftp_folder_name)
+                if (err.message && err.message.includes("UNIQUE constraint failed")) {
+                    let field = "name or ftp_folder_name";
+                    if (err.message.includes("games.name")) field = "name";
+                    if (err.message.includes("games.ftp_folder_name")) field = "ftp_folder_name";
+                    return reject({ statusCode: 409, message: `Game with this ${field} already exists.` });
+                }
+                console.error("Error in gameRepository.createGame:", err.message);
+                reject(new Error("Failed to create game in database."));
+            } else {
+                resolve({ 
+                    id: this.lastID, 
+                    name, 
+                    description, 
+                    cover_image_url, 
+                    ftp_folder_name 
+                });
+            }
+        });
+    });
+};
