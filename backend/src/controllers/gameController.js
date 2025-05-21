@@ -136,3 +136,26 @@ exports.getRecentMods = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.createGame = async (req, res, next) => {
+    try {
+        // Por ahora, asumimos que el usuario logueado puede crear juegos.
+        // En el futuro, podrías añadir una verificación de rol de administrador aquí.
+        // const userId = req.user.id; 
+
+        const { name, description, cover_image_url, ftp_folder_name } = req.body;
+        if (!name || !ftp_folder_name) {
+            return res.status(400).json({ message: "Game name and FTP folder name are required." });
+        }
+
+        const result = await gameService.createGameEntry({
+            name,
+            description,
+            cover_image_url,
+            ftp_folder_name_suggestion: ftp_folder_name // Pasamos la sugerencia del usuario
+        });
+        res.status(201).json(result);
+    } catch (error) {
+        next(error);
+    }
+};

@@ -135,223 +135,28 @@
         <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
     </footer>
 
-    <script>
-        // apiService instance is globally available from ApiService.js
-        
-        const usernameDisplay = document.getElementById('username-display');
-        const emailDisplay = document.getElementById('email-display');
-        const pageMainTitle = document.getElementById('page-main-title');
-        
-        const profilePictureImg = document.getElementById('profile-picture');
-        const profilePictureFileInput = document.getElementById('profilePictureFile');
-        const uploadPicStatus = document.getElementById('upload-pic-status');
-        const logoutButtonProfilePage = document.getElementById('logout-button-profile');
-
-        const inboxList = document.getElementById('inbox-list');
-        const messageDetailView = document.getElementById('message-detail-view');
-        const detailSender = document.getElementById('detail-sender');
-        const detailSubject = document.getElementById('detail-subject');
-        const detailDate = document.getElementById('detail-date');
-        const detailBody = document.getElementById('detail-body');
-        const backToInboxBtn = document.getElementById('back-to-inbox-btn');
-
-        const composeMessageBtn = document.getElementById('compose-message-btn');
-        const composeModal = document.getElementById('composeModal');
-        const closeComposeModalBtn = document.getElementById('closeComposeModal');
-        const sendMessageForm = document.getElementById('sendMessageForm');
-        const composeStatusMessage = document.getElementById('composeStatusMessage');
-
-        let currentUserData = null; // Store fetched user data
-
-        function displayUploadStatus(message, type = 'info') {
-            uploadPicStatus.textContent = message;
-            uploadPicStatus.className = 'status-message'; 
-            if (type === 'success') uploadPicStatus.classList.add('status-success');
-            else if (type === 'error') uploadPicStatus.classList.add('status-error');
-            uploadPicStatus.style.display = 'block';
-        }
-
-        async function loadProfileData() {
-            try {
-                currentUserData = await apiService.getMyProfile(); // Uses token from localStorage internally
-                
-                usernameDisplay.textContent = currentUserData.username;
-                emailDisplay.textContent = currentUserData.email;
-                pageMainTitle.textContent = `${currentUserData.username}'s Profile`; // English
-                
-                if (currentUserData.profile_image_url) {
-                    profilePictureImg.src = currentUserData.profile_image_url;
-                } else {
-                    profilePictureImg.src = 'images/default_avatar.png'; 
-                }
-                
-                // Save/update in localStorage for other parts of the app if needed, or always fetch
-                localStorage.setItem('currentUserGameHub', JSON.stringify(currentUserData));
-
-                loadInbox();
-
-            } catch (error) {
-                console.error("Error loading profile data:", error);
-                usernameDisplay.textContent = "Error loading data."; // English
-                emailDisplay.textContent = "Please login again."; // English
-                if (error.requiresLogin || error.status === 401 || error.status === 403) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('currentUserGameHub');
-                    alert("Your session may have expired. Please login again.");
-                    window.location.href = 'login.html';
-                }
-            }
-        }
-        
-        async function loadInbox() {
-            inboxList.innerHTML = '<li>Loading messages...</li>'; // English
-            messageDetailView.style.display = 'none';
-            try {
-                const messages = await apiService.getInternalInbox();
-                inboxList.innerHTML = ''; 
-                if (messages.length === 0) {
-                    inboxList.innerHTML = '<li>Your inbox is empty.</li>'; // English
-                    return;
-                }
-                messages.forEach(msg => {
-                    const item = document.createElement('li');
-                    item.className = 'message-item';
-                    if (!msg.is_read) {
-                        item.classList.add('unread');
-                    }
-                    item.innerHTML = `
-                        <div>
-                            <strong>From:</strong> ${msg.sender_username}<br>
-                            <strong>Subject:</strong> ${msg.subject}
-                        </div>
-                        <div class="meta">${new Date(msg.sent_at).toLocaleString('en-US')}</div>
-                    `;
-                    item.dataset.messageId = msg.id;
-                    item.addEventListener('click', () => showMessageDetail(msg.id));
-                    inboxList.appendChild(item);
-                });
-            } catch (error) {
-                console.error("Error loading inbox:", error);
-                inboxList.innerHTML = `<li style="color:red;">Error loading messages: ${error.message}</li>`;
-            }
-        }
-
-        async function showMessageDetail(messageId) {
-            inboxList.style.display = 'none'; 
-            messageDetailView.style.display = 'block';
-            detailSender.textContent = 'Loading...';
-            detailSubject.textContent = '';
-            detailDate.textContent = '';
-            detailBody.textContent = '';
-
-            try {
-                const message = await apiService.getInternalMessageById(messageId);
-                detailSender.textContent = message.sender_username;
-                detailSubject.textContent = message.subject;
-                detailDate.textContent = new Date(message.sent_at).toLocaleString('en-US');
-                detailBody.textContent = message.body;
-
-                const listItem = inboxList.querySelector(`li[data-message-id="${messageId}"]`);
-                if(listItem && listItem.classList.contains('unread')){
-                    listItem.classList.remove('unread');
-                }
-            } catch (error) {
-                console.error("Error loading message detail:", error);
-                detailBody.textContent = `Error loading message: ${error.message}`;
-            }
-        }
-
-        backToInboxBtn.addEventListener('click', () => {
-            messageDetailView.style.display = 'none';
-            inboxList.style.display = 'block';
-        });
-
-        profilePictureFileInput.addEventListener('change', async function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('profilePictureFile', file);
-
-            try {
-                const result = await apiService.uploadProfilePicture(formData);
-                
-                profilePictureImg.src = result.profile_image_url;
-                
-                if(currentUserData) { // Actualiza la data local si la usas
-                    currentUserData.profile_image_url = result.profile_image_url;
-                    localStorage.setItem('currentUserGameHub', JSON.stringify(currentUserData));
-                }
-            } catch (error) {
-                console.error("Error uploading profile picture:", error);
-                displayUploadStatus(error.message || "Failed to upload picture.", 'error');
-            }
-        });
-
-        logoutButtonProfilePage.addEventListener('click', () => {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUserGameHub');
-            alert("You have been successfully logged out.");
-            window.location.href = 'login.html';
-        });
-        
-        composeMessageBtn.addEventListener('click', () => {
-            if (!currentUserData) { 
-                alert("User data not fully loaded. Please wait or try re-logging in.");
-                return;
-            }
-            sendMessageForm.reset();
-            composeStatusMessage.style.display = 'none';
-            composeModal.style.display = 'block';
-        });
-        closeComposeModalBtn.onclick = () => composeModal.style.display = "none";
-        window.onclick = (event) => { if (event.target == composeModal) composeModal.style.display = "none"; };
-
-        sendMessageForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const recipientUsername = document.getElementById('recipientUsername').value;
-            const subject = document.getElementById('messageSubject').value;
-            const body = document.getElementById('messageBody').value;
-
-            composeStatusMessage.style.display = 'none';
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.textContent;
-            submitButton.disabled = true;
-            submitButton.textContent = 'Sending...';
-
-            try {
-                const data = await apiService.sendInternalMessage(recipientUsername, subject, body);
-                composeStatusMessage.textContent = data.message || "Message sent successfully.";
-                composeStatusMessage.className = 'status-message status-success';
-                this.reset();
-                setTimeout(() => {
-                    composeModal.style.display = "none";
-                    loadInbox(); // Refresh inbox after sending
-                }, 1500);
-            } catch (error) {
-                console.error("Error sending internal message:", error);
-                composeStatusMessage.textContent = error.message || "Failed to send message.";
-                composeStatusMessage.className = 'status-message status-error';
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Send Message';
-                composeStatusMessage.style.display = 'block';
-            }
-        });
-
+    <script src="js/page_managers/ProfilePageManager.js"></script> <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            // Assuming renderNavigationBar is globally available from navigation.js
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // o 'profile.html'
+            
+            // Renderizar la barra de navegación global
+            // Asegúrate de que navigation.js esté incluido ANTES de ProfilePageManager.js
+            // si ProfilePageManager necesitara algo de él al instanciarse (no es el caso aquí).
             if (typeof renderNavigationBar === 'function') {
                 renderNavigationBar(currentPage);
             } else {
-                console.error("renderNavigationBar function not found in navigation.js");
+                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded.");
             }
-            
-            // authGuard.js should have already run if included in <head>
-            // Call loadProfileData only if a token exists (authGuard might redirect before this)
-            if (localStorage.getItem('authToken')) {
-                loadProfileData();
+
+            // authGuard.js debería haber corrido si esta página es protegida y se incluye en el <head>.
+            // Si no, el constructor de ProfilePageManager o loadProfileData manejarán la redirección si no hay token.
+
+            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined') {
+                new ProfilePageManager(apiService); // Instanciar el manejador de la página de perfil
+            } else {
+                console.error("ApiService is not available. Cannot initialize ProfilePageManager.");
+                const mainContent = document.querySelector('main');
+                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading page components. Please try again later.</p>';
             }
         });
     </script>

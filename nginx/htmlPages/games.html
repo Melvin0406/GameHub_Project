@@ -70,6 +70,19 @@
         .status-error { background-color: #dc3545; color: white; }
         .loading-message { text-align: center; font-size: 1.5em; padding: 3rem; color: #00aaff; }
         #back-to-games { margin-bottom: 1.5rem; font-size: 1em; /* Estilo ya en .mod-actions button */ }
+
+        button#add-new-game-btn { 
+            display: block; /* Para que ocupe su propia línea */
+            margin: 0 auto 2rem auto; /* Centrar y añadir margen inferior */
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1em;
+            background-color: #28a745; /* Verde */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button#add-new-game-btn:hover { background-color: #218838; }
         
         /* Modal Styles (Reutilizado para el modal de edición) */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
@@ -93,6 +106,37 @@
     </header>
 
     <main>
+        <div id="admin-actions-games" style="text-align:center; margin-bottom: 2rem; display:none;">
+            <button id="add-new-game-btn">Add New Game</button>
+        </div>
+        
+        <div id="addGameModal" class="modal"> <div class="modal-content">
+                <span class="close-btn" id="closeAddGameModal">&times;</span>
+                <h2>Add New Game</h2>
+                <form id="addGameForm">
+                    <div>
+                        <label for="newGameName">Game Name:</label>
+                        <input type="text" id="newGameName" name="name" required>
+                    </div>
+                    <div>
+                        <label for="newGameDescription">Description:</label>
+                        <textarea id="newGameDescription" name="description"></textarea>
+                    </div>
+                    <div>
+                        <label for="newGameCoverImageUrl">Cover Image URL:</label>
+                        <input type="url" id="newGameCoverImageUrl" name="cover_image_url" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div>
+                        <label for="newGameFtpFolderName">FTP Folder Name:</label>
+                        <input type="text" id="newGameFtpFolderName" name="ftp_folder_name" placeholder="Ej: MyCoolGame (sin espacios ni caracteres especiales)" required>
+                        <small style="display:block; font-size:0.8em; color:#888;">This will be the folder name on the server. Use letters, numbers, underscores.</small>
+                    </div>
+                    <button type="submit" class="action-button">Create Game</button>
+                </form>
+                <div id="addGameStatusMessage" class="status-message" style="display:none;"></div>
+            </div>
+        </div>
+        
         <div id="games-list-section">
             <h2 class="section-title">Explore Our Games</h2>
             <div id="game-grid-container" class="game-grid">
@@ -155,285 +199,25 @@
         <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
     </footer>
 
-    <script>
-        // apiService instance is globally available
-        
-        const gameGridContainer = document.getElementById('game-grid-container');
-        const gamesListSection = document.getElementById('games-list-section');
-        
-        const gameDetailSection = document.getElementById('game-detail-section');
-        const gameDetailCover = document.getElementById('game-detail-cover');
-        const gameDetailTitle = document.getElementById('game-detail-title');
-        const gameDetailDescription = document.getElementById('game-detail-description');
-        const modListContainer = document.getElementById('mod-list-container');
-        const backToGamesButton = document.getElementById('back-to-games');
-
-        const uploadModSection = document.getElementById('upload-mod-section');
-        const uploadModForm = document.getElementById('uploadModForm');
-        const uploadStatusMessage = document.getElementById('uploadStatusMessage');
-
-        // Elementos del Modal de Edición
-        const editModModal = document.getElementById('editModModal');
-        const closeEditModModalBtn = document.getElementById('closeEditModModal');
-        const editModForm = document.getElementById('editModForm');
-        const editModIdInput = document.getElementById('editModIdInput'); // ID actualizado
-        const editModNameInput = document.getElementById('editModName');
-        const editModVersionInput = document.getElementById('editModVersion');
-        const editModDescriptionInput = document.getElementById('editModDescription');
-        const editModStatusMessage = document.getElementById('editModStatusMessage');
-
-        let currentSelectedGame = null;
-        let globalCurrentUserData = null; 
-
-        async function fetchCurrentUserData() {
-            const authToken = localStorage.getItem('authToken');
-            if (authToken && !globalCurrentUserData) {
-                try {
-                    globalCurrentUserData = await apiService.getMyProfile();
-                } catch (error) {
-                    console.warn("Could not fetch current user data for games page:", error.message);
-                    if (error.status === 401 || error.status === 403) {
-                        localStorage.removeItem('authToken');
-                        localStorage.removeItem('currentUserGameHub');
-                        if (typeof renderNavigationBar === 'function') {
-                             renderNavigationBar(window.location.pathname.split('/').pop() || 'index.html');
-                        }
-                    }
-                    globalCurrentUserData = null;
-                }
-            }
-        }
-        
-        async function loadGames() {
-            gameGridContainer.innerHTML = '<p class="loading-message">Loading games...</p>';
-            try {
-                const games = await apiService.getAllGames();
-                gameGridContainer.innerHTML = ''; 
-                if (!games || games.length === 0) {
-                    gameGridContainer.innerHTML = '<p>No games available at the moment.</p>';
-                    return;
-                }
-                games.forEach(game => {
-                    const card = document.createElement('div');
-                    card.className = 'game-card';
-                    card.dataset.gameId = game.id;
-                    card.dataset.gameName = game.name;
-                    card.dataset.gameDescription = game.description;
-                    card.dataset.gameCover = game.cover_image_url;
-                    card.dataset.gameFtpFolder = game.ftp_folder_name;
-
-                    card.innerHTML = `
-                        <img src="${game.cover_image_url || 'images/placeholder_game.png'}" alt="${game.name}" class="game-cover">
-                        <div class="game-card-content">
-                            <h3>${game.name}</h3>
-                            <p class="game-description">${game.description || 'No description available.'}</p>
-                        </div>
-                        <span class="game-card-button">View Mods</span>
-                    `;
-                    card.addEventListener('click', () => loadGameDetails(game));
-                    gameGridContainer.appendChild(card);
-                });
-            } catch (error) {
-                console.error("Error loading games:", error);
-                gameGridContainer.innerHTML = `<p class="status-error">Error loading games: ${error.message}</p>`;
-            }
-        }
-
-        async function loadGameDetails(game) {
-            currentSelectedGame = game;
-            gamesListSection.style.display = 'none';
-            gameDetailSection.style.display = 'block';
-            gameDetailCover.src = game.cover_image_url || 'images/placeholder_game.png';
-            gameDetailCover.alt = `Cover for ${game.name}`;
-            gameDetailTitle.textContent = game.name;
-            gameDetailDescription.textContent = game.description || 'No detailed description for this game.';
-            modListContainer.innerHTML = '<p class="loading-message">Loading mods...</p>';
+    <script src="js/page_managers/GamesPageManager.js"></script> <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // o 'games.html'
             
-            if (localStorage.getItem('authToken')) {
-                uploadModSection.style.display = 'block';
-            } else {
-                uploadModSection.style.display = 'none';
-            }
-
-            try {
-                const gameDetailsWithMods = await apiService.getGameDetails(game.id);
-                modListContainer.innerHTML = '';
-                if (!gameDetailsWithMods.mods || gameDetailsWithMods.mods.length === 0) {
-                    modListContainer.innerHTML = '<li>No mods available for this game. Be the first to upload one!</li>';
-                } else {
-                    gameDetailsWithMods.mods.forEach(mod => {
-                        const listItem = document.createElement('li');
-                        listItem.className = 'mod-item';
-                        const downloadUrl = `/api/games/mods/download/${mod.id}`; 
-                        const fileSizeMB = mod.file_size ? (mod.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A';
-                        
-                        let actionButtonsHtml = `<a href="${downloadUrl}" title="Download ${mod.file_name}">Download</a>`;
-                        const loggedInUserId = globalCurrentUserData ? globalCurrentUserData.id : null;
-
-                        if (loggedInUserId && mod.user_id === loggedInUserId) {
-                            actionButtonsHtml += ` <button class="edit-mod-btn" 
-                                                        data-mod-id="${mod.id}" 
-                                                        data-mod-name="${mod.name}"
-                                                        data-mod-version="${mod.version || ''}"
-                                                        data-mod-description="${mod.description || ''}">Edit</button>`;
-                            actionButtonsHtml += ` <button class="delete-mod-btn" 
-                                                        data-mod-id="${mod.id}" 
-                                                        data-mod-name="${mod.name}">Delete</button>`;
-                        }
-
-                        listItem.innerHTML = `
-                            <div class="mod-info">
-                                <h4>${mod.name} (v${mod.version || 'N/A'})</h4>
-                                <p>${mod.description || 'No description.'}</p>
-                                <p><small>File: ${mod.file_name} | Size: ${fileSizeMB}</small></p>
-                                <p><small>Uploaded by: ${mod.uploaded_by_username || 'Unknown'} on ${new Date(mod.upload_date).toLocaleDateString('en-US')}</small></p>
-                            </div>
-                            <div class="mod-actions">
-                                ${actionButtonsHtml}
-                            </div>
-                        `;
-                        modListContainer.appendChild(listItem);
-                    });
-                }
-
-                // Add event listeners for dynamically created buttons
-                modListContainer.querySelectorAll('.delete-mod-btn').forEach(button => {
-                    button.addEventListener('click', handleDeleteMod);
-                });
-                modListContainer.querySelectorAll('.edit-mod-btn').forEach(button => {
-                    button.addEventListener('click', handleOpenEditModal);
-                });
-
-            } catch (error) {
-                console.error(`Error loading mods for game ${game.id}:`, error);
-                modListContainer.innerHTML = `<li class="status-error">Error loading mods: ${error.message}</li>`;
-            }
-        }
-
-        function showGamesList() {
-            gameDetailSection.style.display = 'none';
-            gamesListSection.style.display = 'block';
-            currentSelectedGame = null;
-            if (uploadModSection) uploadModSection.style.display = 'none';
-        }
-        backToGamesButton.addEventListener('click', showGamesList);
-
-        async function handleDeleteMod(event) {
-            const modId = event.target.dataset.modId;
-            const modName = event.target.dataset.modName;
-            if (confirm(`Are you sure you want to delete the mod "${modName}"? This action cannot be undone.`)) {
-                try {
-                    const result = await apiService.deleteMod(modId);
-                    alert(result.message || "Mod deleted successfully.");
-                    if (currentSelectedGame) loadGameDetails(currentSelectedGame);
-                    else showGamesList();
-                } catch (error) {
-                    console.error("Error deleting mod:", error);
-                    alert(`Failed to delete mod: ${error.message}`);
-                }
-            }
-        }
-
-        function handleOpenEditModal(event) {
-            const modId = event.target.dataset.modId;
-            const modName = event.target.dataset.modName;
-            const modVersion = event.target.dataset.modVersion;
-            const modDescription = event.target.dataset.modDescription;
-
-            editModIdInput.value = modId;
-            editModNameInput.value = modName;
-            editModVersionInput.value = modVersion;
-            editModDescriptionInput.value = modDescription;
-            
-            editModStatusMessage.style.display = 'none';
-            editModModal.style.display = 'block';
-        }
-
-        if(closeEditModModalBtn) {
-            closeEditModModalBtn.onclick = () => editModModal.style.display = "none";
-        }
-        window.addEventListener('click', (event) => {
-            if (event.target == editModModal) editModModal.style.display = "none";
-        });
-
-        if(editModForm) {
-            editModForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const modId = editModIdInput.value;
-                const name = editModNameInput.value;
-                const version = editModVersionInput.value;
-                const description = editModDescriptionInput.value;
-
-                const submitButton = this.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.textContent;
-                submitButton.disabled = true;
-                submitButton.textContent = 'Saving...';
-                editModStatusMessage.style.display = 'none';
-                editModStatusMessage.className = 'status-message';
-
-                try {
-                    const result = await apiService.updateModDetails(modId, { name, description, version });
-                    editModStatusMessage.textContent = result.message || "Mod details updated successfully.";
-                    editModStatusMessage.classList.add('status-success');
-                    
-                    setTimeout(() => {
-                        editModModal.style.display = "none";
-                        if (currentSelectedGame) loadGameDetails(currentSelectedGame); 
-                    }, 1500);
-                } catch (error) {
-                    console.error("Error updating mod details:", error);
-                    editModStatusMessage.textContent = error.message || "Failed to update mod details.";
-                    editModStatusMessage.classList.add('status-error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalButtonText;
-                    editModStatusMessage.style.display = 'block';
-                }
-            });
-        }
-
-        if (uploadModForm) {
-            uploadModForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const authToken = localStorage.getItem('authToken');
-                if (!authToken) { alert("You must be logged in to upload mods."); return; }
-                if (!currentSelectedGame || !currentSelectedGame.id) { alert("Error: No game selected for mod upload."); return; }
-
-                const formData = new FormData(this);
-                const submitButton = this.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.textContent;
-                submitButton.disabled = true;
-                submitButton.textContent = 'Uploading...';
-                uploadStatusMessage.style.display = 'none';
-                uploadStatusMessage.className = 'status-message';
-
-                try {
-                    const data = await apiService.uploadMod(currentSelectedGame.id, formData);
-                    uploadStatusMessage.textContent = data.message || "Mod uploaded successfully.";
-                    uploadStatusMessage.classList.add('status-success');
-                    this.reset(); 
-                    loadGameDetails(currentSelectedGame); 
-                } catch (error) {
-                    console.error("Error uploading mod:", error);
-                    uploadStatusMessage.textContent = error.message || "Network or server error while uploading mod.";
-                    uploadStatusMessage.classList.add('status-error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalButtonText;
-                    uploadStatusMessage.style.display = 'block';
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            // Renderizar la barra de navegación global
             if (typeof renderNavigationBar === 'function') {
                 renderNavigationBar(currentPage);
             } else {
-                console.error("renderNavigationBar function not found. Make sure navigation.js is loaded BEFORE this script.");
+                console.error("renderNavigationBar function not found. Make sure navigation.js is loaded BEFORE this script and GamesPageManager.js.");
             }
-            await fetchCurrentUserData();
-            loadGames();
+
+            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined') {
+                new GamesPageManager(apiService);
+            } else {
+                console.error("ApiService is not available. Cannot initialize GamesPageManager.");
+                // Podrías mostrar un error al usuario aquí
+                const mainContent = document.querySelector('main');
+                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading page components. Please try again later.</p>';
+            }
         });
     </script>
 </body>

@@ -251,3 +251,63 @@ exports.getRecentMods = async (limit = 5) => {
     // Puedes procesar los mods aquí si es necesario antes de enviarlos
     return mods;
 };
+
+// Función para sanitizar nombres de carpeta (simple ejemplo)
+function sanitizeFolderName(name) {
+    return name.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/__+/g, '_');
+}
+
+exports.createGameEntry = async ({ name, description, cover_image_url, ftp_folder_name_suggestion }) => {
+    if (!name || !ftp_folder_name_suggestion) {
+        const error = new Error('Game name and FTP folder name suggestion are required.');
+        error.statusCode = 400;
+        throw error;
+    }
+    if (!FTP_MODS_ROOT_PATH) {
+        throw new Error("FTP root path configuration is missing. Cannot create game folder.");
+    }
+
+    const sanitizedFolderName = sanitizeFolderName(ftp_folder_name_suggestion);
+    if (!sanitizedFolderName) {
+         const error = new Error('FTP folder name is invalid after sanitization.');
+         error.statusCode = 400;
+         throw error;
+    }
+
+    // La ruta completa al directorio de mods para este nuevo juego
+    const gameModDirectoryOnServer = path.join(FTP_MODS_ROOT_PATH, sanitizedFolderName);
+
+    // 1. Intentar crear la carpeta en el sistema de archivos (que es tu FTP)
+    try {
+        await fs.mkdir(gameModDirectoryOnServer, { recursive: false }); // No recursivo para asegurar que FTP_MODS_ROOT_PATH exista
+        console.log(`Directory created for game: ${gameModDirectoryOnServer}`);
+    } catch (diskError) {
+        if (diskError.code === 'EEXIST') { // La carpeta ya existe
+            console.warn(`FTP folder '${sanitizedFolderName}' already exists. Proceeding to add to DB if not present.`);
+            // Podrías decidir si esto es un error o no. Si la carpeta existe pero no el juego en BD,
+            // podría ser un intento de re-añadir. Por ahora, permitimos continuar si es EEXIST.
+        } else {
+            console.error("Error creating game directory on FTP/disk:", diskError);
+            throw new Error("Server error: Could not create directory for game mods.");
+        }
+    }
+
+    // 2. Intentar crear la entrada en la base de datos
+    try {
+        const newGame = await gameRepository.createGame({
+            name,
+            description: description || '',
+            cover_image_url: cover_image_url || '',
+            ftp_folder_name: sanitizedFolderName // Usar el nombre sanitizado
+        });
+        return { message: 'Game created successfully.', game: newGame };
+    } catch (dbError) {
+        // Si falla la inserción en BD (ej. nombre de juego ya existe, pero la carpeta se creó)
+        // Podríamos intentar borrar la carpeta creada, pero esto puede complicar la lógica de reintentos.
+        // Por ahora, si la carpeta se creó y la BD falla, la carpeta queda.
+        console.error("Error saving game to DB after creating folder (if it was new):", dbError.message);
+        // Re-lanzar el error de la BD (que ya tiene statusCode si es de constraint)
+        if (dbError.statusCode) throw dbError; 
+        throw new Error("Failed to save game to database.");
+    }
+};
