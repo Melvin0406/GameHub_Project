@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Games & Mods - GameHub Local</title>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
+    
     <script src="js/navigation.js"></script> <style>
         /* CSS General y de Navegación (similar al anterior pero ajustado) */
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
@@ -199,24 +205,28 @@
         <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
     </footer>
 
-    <script src="js/page_managers/GamesPageManager.js"></script> <script>
+    <script src="js/page_managers/GamesPageManager.js"></script> 
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // o 'games.html'
+            const currentPage = 'games.html';
             
-            // Renderizar la barra de navegación global
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             } else {
-                console.error("renderNavigationBar function not found. Make sure navigation.js is loaded BEFORE this script and GamesPageManager.js.");
+                console.error("initializeNavigation function not found.");
             }
-
-            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined') {
-                new GamesPageManager(apiService);
+    
+            let gamesPageManagerInstance;
+            if (typeof GamesPageManager !== 'undefined' && typeof apiService !== 'undefined') {
+                gamesPageManagerInstance = new GamesPageManager(apiService);
+                // Si GamesPageManager es un Observer (como lo hicimos en el ejemplo):
+                // authManager.addObserver(gamesPageManagerInstance); // Ya debería estar en su constructor
             } else {
-                console.error("ApiService is not available. Cannot initialize GamesPageManager.");
-                // Podrías mostrar un error al usuario aquí
-                const mainContent = document.querySelector('main');
-                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading page components. Please try again later.</p>';
+                console.error("Cannot initialize GamesPageManager.");
+            }
+    
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
             }
         });
     </script>

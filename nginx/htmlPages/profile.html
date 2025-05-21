@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>My Profile - GameHub Local</title>
-    <script src="js/authGuard.js"></script> <script src="js/BaseApiService.js"></script>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    <script src="js/auth/authGuard.js"></script>
+    
+    <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
-    <script src="js/navigation.js"></script> <style>
+    
+    <script src="js/navigation.js"></script> 
+    <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; }
         header { background-color: #121212; color: #fff; padding: 1rem 0; text-align: center; border-bottom: 3px solid #007bff; }
         header h1#page-main-title { margin: 0; font-size: 2.5em; }
@@ -135,28 +143,28 @@
         <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
     </footer>
 
-    <script src="js/page_managers/ProfilePageManager.js"></script> <script>
+    <script src="js/page_managers/ProfilePageManager.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // o 'profile.html'
+            const currentPage = 'profile.html';
             
-            // Renderizar la barra de navegación global
-            // Asegúrate de que navigation.js esté incluido ANTES de ProfilePageManager.js
-            // si ProfilePageManager necesitara algo de él al instanciarse (no es el caso aquí).
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             } else {
-                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded.");
+                console.error("initializeNavigation function not found.");
             }
 
-            // authGuard.js debería haber corrido si esta página es protegida y se incluye en el <head>.
-            // Si no, el constructor de ProfilePageManager o loadProfileData manejarán la redirección si no hay token.
-
-            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined') {
-                new ProfilePageManager(apiService); // Instanciar el manejador de la página de perfil
+            let profilePageManagerInstance;
+            if (typeof ProfilePageManager !== 'undefined' && typeof apiService !== 'undefined') {
+                profilePageManagerInstance = new ProfilePageManager(apiService);
+                // Si ProfilePageManager es un Observer:
+                // authManager.addObserver(profilePageManagerInstance); // En su constructor
             } else {
-                console.error("ApiService is not available. Cannot initialize ProfilePageManager.");
-                const mainContent = document.querySelector('main');
-                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading page components. Please try again later.</p>';
+                console.error("Cannot initialize ProfilePageManager.");
+            }
+            
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
             }
         });
     </script>

@@ -3,9 +3,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - GameHub Local</title>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
-    <script src="js/navigation.js"></script> <style>
+    
+    <script src="js/navigation.js"></script>
+    <style>
         body { 
             margin: 0; 
             padding: 0; 
@@ -194,17 +201,20 @@
             try {
                 const data = await apiService.login(email, password); 
 
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('currentUserGameHub', JSON.stringify(data.user)); // Save user info
-                
-                const redirectUrl = localStorage.getItem('loginRedirect');
+                if (typeof authManager !== 'undefined' && data.user && data.token) {
+                    authManager.login(data.user, data.token); // AuthManager guarda en localStorage y notifica
+                } else {
+                    throw new Error("Failed to complete login with auth manager.");
+                }
+
+                // La redirección sigue igual o podría ser manejada por un observador específico
+                const redirectUrl = localStorage.getItem('loginRedirect'); // loginRedirect aún se usa
                 if (redirectUrl) {
                     localStorage.removeItem('loginRedirect');
                     window.location.href = redirectUrl;
                 } else {
-                    window.location.href = 'index.html'; // Default redirect to home page
+                    window.location.href = 'index.html';
                 }
-
             } catch (error) {
                 console.error('Error during login process:', error); // English
                 let displayMessage = error.message || 'An error occurred. Please try again later.'; // English
@@ -226,11 +236,27 @@
 
         // Call navigation bar renderer on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
+            // Esta página es pública, authGuard.js no debería estar aquí.
+            const currentPage = 'login.html'; 
+            
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             } else {
-                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded.");
+                console.error("initializeNavigation function not found.");
+            }
+            
+            // No hay PageManager específico para login.html por ahora.
+
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
+            } else {
+                console.error("AuthManager or notifyInitialState not found.");
+            }
+
+            // Redirigir si ya está logueado (opcional)
+            if (typeof authManager !== 'undefined' && authManager.isUserLoggedIn()) {
+                console.log("User already logged in, redirecting from login page to home.");
+                window.location.href = 'index.html';
             }
         });
     </script>

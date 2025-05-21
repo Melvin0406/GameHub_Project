@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Start Your Stream - GameHub Local</title>
-    <script src="js/authGuard.js"></script>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    <script src="js/auth/authGuard.js"></script>
+    
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
+    
     <script src="js/navigation.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; }
@@ -317,23 +323,27 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = 'start_stream.html'; // Set current page for navigation.js
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
-            } else {
-                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded before this script.");
+            const currentPage = 'start_stream.html';
+            
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             }
             
-            // authGuard.js (if included in head) should have already checked for token.
-            // We still check here before making API calls that require auth.
-            if (localStorage.getItem('authToken')) {
-                 loadStreamInfo();
-                 checkMyLiveStatus();
+            // Si StartStreamPageManager fuera un Observer (si lo creas), se registraría aquí.
+
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
+                // Después de que el estado inicial se notifica, podemos cargar la info del stream
+                // si el usuario está logueado.
+                if (authManager.isUserLoggedIn()) {
+                    loadStreamInfo();
+                    checkMyLiveStatus();
+                } else {
+                    // authGuard.js ya debería haber redirigido. Esto es un fallback.
+                    displayStreamInfoError("You must be logged in to view stream setup.");
+                }
             } else {
-                // This case should ideally be handled by authGuard.js redirecting.
-                // If authGuard didn't redirect, it means this page isn't strictly protected by it,
-                // but the functionality needs auth.
-                displayStreamInfoError("You must be logged in to view your stream setup information.");
+                console.error("AuthManager not available.");
             }
         });
     </script>
