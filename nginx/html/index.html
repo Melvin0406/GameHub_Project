@@ -9,6 +9,10 @@
     
     <script src="/socket.io/socket.io.js"></script> 
     
+    <script src="../htmlPages/js/patterns/Subject.js"></script>
+    <script src="../htmlPages/js/patterns/Observer.js"></script>
+
+    <script src="../htmlPages/js/auth/AuthManager.js"></script>
     <script src="../htmlPages/js/BaseApiService.js"></script> 
     <script src="../htmlPages/js/ApiService.js"></script>
     <script src="../htmlPages/js/navigation.js"></script>
@@ -135,6 +139,8 @@
         let socket = null; 
         let currentStreamKey = null; 
         let globalAuthToken = localStorage.getItem('authToken'); // Check initial token
+        let streamBaseUrl;
+        let mainSiteBaseUrl;
 
         // --- Helper Functions ---
         function escapeHTML(str) {
@@ -321,39 +327,25 @@
         }
         
         // --- Page Initialization ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            const urlParamsOnInit = new URLSearchParams(window.location.search);
-            const tokenFromUrl = urlParamsOnInit.get('authToken');
-            let keyFromUrl = urlParamsOnInit.get('key');
+        async function initializePageForStream() {
+            // AuthManager.processTokenFromUrlAndStore() ya se ejecutó cuando AuthManager.js cargó.
+            // Así que authManager ya tiene su estado inicial (con token de URL si se pasó).
 
-            if (tokenFromUrl) {
-                console.log("Token received from URL parameter:", tokenFromUrl);
-                localStorage.setItem('authToken', tokenFromUrl); // Guarda en el localStorage de servidor-stream...
-                globalAuthToken = tokenFromUrl; // Establece la variable global para esta sesión de página
-
-                // Limpia la URL para que el token no quede visible, pero conserva otros parámetros como 'key'
-                const newSearchParams = new URLSearchParams();
-                if (keyFromUrl) {
-                    newSearchParams.set('key', keyFromUrl);
-                }
-                
-                const newRelativePath = window.location.pathname + (newSearchParams.toString() ? '?' + newSearchParams.toString() : '');
-                history.replaceState(null, '', newRelativePath);
-                console.log("Token stored in localStorage for stream page and URL cleaned.");
-            } else {
-                // Si no vino en la URL, intenta cargarlo del localStorage de este dominio (servidor-stream...)
-                globalAuthToken = localStorage.getItem('authToken');
-                console.log("Token loaded from stream page's localStorage:", globalAuthToken);
+            // 1. Inicializar la navegación (registra NavigationUIObserver)
+            const currentPageFile = 'view_stream.html'; // Nombre conceptual
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             }
 
-            const currentPageFile = 'live_streams.html';
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPageFile);
-            } else {
-                console.error("renderNavigationBar function not found.");
+            // 2. Notificar el estado inicial de autenticación (ya cargado por authManager)
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
             }
 
-            // Determinar URLs base
+            // 3. Obtener el token actual de authManager para la lógica de esta página
+            globalAuthTokenForStreamPage = authManager.getToken();
+
+            // 4. Configurar URLs base
             const currentHostnameOnLoad = window.location.hostname;
             if (currentHostnameOnLoad.includes('cetys.local')) {
                 streamBaseUrl = 'http://servidor-stream.cetys.local';
@@ -362,21 +354,26 @@
                 streamBaseUrl = 'http://servidor-stream.casa.local';
                 mainSiteBaseUrl = 'http://servidor-juego.casa.local';
             }
-            backToMainSiteLink.href = mainSiteBaseUrl + '/index.html';
-            
-            // Conectar socket si hay token
-            if (globalAuthToken) {
-                connectStreamChatSocket(globalAuthToken);
-            } else { // Configurar UI de chat para estado no logueado
-                chatMessageInput.placeholder = "Login to chat...";
-                chatMessageInput.disabled = true;
-                sendChatMessageButton.disabled = true;
+            if(backToMainSiteLink) backToMainSiteLink.href = mainSiteBaseUrl + '/index.html';
+
+            // 5. Obtener streamKey de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            currentStreamKey = urlParams.get('key');
+
+            // 6. Conectar chat y cargar contenido del stream
+            if (globalAuthTokenForStreamPage) {
+                connectStreamChatSocket(globalAuthTokenForStreamPage);
+            } else {
+                if(chatMessageInput) chatMessageInput.placeholder = "Login to chat...";
+                if(chatMessageInput) chatMessageInput.disabled = true;
+                if(sendChatMessageButton) sendChatMessageButton.disabled = true;
                 if(chatPlaceholder) chatPlaceholder.textContent = "Login to participate in chat.";
             }
             
-            // Cargar contenido del stream (info y video)
-            await loadStreamPageContent(); 
-        });
+            await loadStreamPageContent(); // Esta función usa currentStreamKey
+        }
+
+        document.addEventListener('DOMContentLoaded', initializePageForStream);
 
         window.addEventListener('beforeunload', () => {
             if (hlsPlayer) hlsPlayer.destroy();

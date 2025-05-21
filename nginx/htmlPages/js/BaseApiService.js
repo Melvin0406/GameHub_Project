@@ -13,11 +13,11 @@ class BaseApiService {
         };
 
         if (requiresAuth) {
-            const token = localStorage.getItem('authToken');
+            const token = authManager.getToken(); // Obtener token de AuthManager
             if (!token) {
-                console.error('BaseApiService: Token de autenticación no encontrado para ruta protegida.');
-                const authError = new Error('Autenticación requerida. Por favor, inicia sesión.');
-                authError.requiresLogin = true;
+                console.error('BaseApiService: Auth token not available via AuthManager.');
+                const authError = new Error('Authentication required. Please login.');
+                authError.requiresLogin = true; // Para que el catch lo maneje
                 throw authError;
             }
             headers['Authorization'] = `Bearer ${token}`;
@@ -61,8 +61,13 @@ class BaseApiService {
         const headers = {};
     
         if (requiresAuth) {
-            const token = localStorage.getItem('authToken');
-            if (!token) { throw new Error('Autenticación requerida.'); }
+            const token = authManager.getToken(); // Obtener token de AuthManager
+            if (!token) {
+                console.error('BaseApiService: Auth token not available via AuthManager for upload.');
+                const authError = new Error('Authentication required for upload. Please login.');
+                authError.requiresLogin = true;
+                throw authError;
+            }
             headers['Authorization'] = `Bearer ${token}`;
         }
     

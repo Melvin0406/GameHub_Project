@@ -1,83 +1,138 @@
+// nginx/htmlPages/js/auth/AuthManager.js
+// Requiere que Subject.js (js/patterns/Subject.js) esté cargado primero.
+
 class AuthManager extends Subject {
+    static processTokenFromUrlAndStore() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('authToken');
+        const keyFromUrl = urlParams.get('key'); // Conservar la stream key
+    
+        if (tokenFromUrl) {
+            console.log("AuthManager (static): Token found in URL, storing to localStorage for this origin.");
+            localStorage.setItem('authToken', tokenFromUrl);
+            // Opcional: Si el token contiene info del usuario, podrías guardarla aquí también,
+            // pero es más seguro que AuthManager la obtenga con /api/users/me después.
+            // Por ahora, solo guardamos el token. AuthManager._loadStateFromLocalStorageOnInit lo usará.
+    
+            // Limpiar authToken de la URL visible, pero conservar otros params como 'key'
+            const newSearchParams = new URLSearchParams();
+            if (keyFromUrl) newSearchParams.set('key', keyFromUrl);
+            // Añade aquí otros parámetros que quieras conservar si los hubiera
+            // urlParams.forEach((value, keyParam) => {
+            //    if (keyParam !== 'authToken') newSearchParams.set(keyParam, value);
+            // });
+    
+            const newRelativePath = window.location.pathname + (newSearchParams.toString() ? '?' + newSearchParams.toString() : '');
+            history.replaceState(null, '', newRelativePath);
+            return true; // Indica que se procesó un token
+        }
+        return false; // No se procesó token de la URL
+    }
+    
     constructor() {
-    super(); // Llama al constructor de Subject para inicializar this.\_observers
-    if (AuthManager.\_instance) {
-    return AuthManager.\_instance;
-    }
-    AuthManager.\_instance = this;
+        // Primero, procesar token de URL si existe y guardarlo en localStorage
+        // para que _loadStateFromLocalStorageOnInit lo pueda leer.
+        AuthManager.processTokenFromUrlAndStore(); 
     
-    this.currentUser = null;
-    this.authToken = null;
-    this._loadStateFromLocalStorage();
+        super(); 
+        if (AuthManager._instance) {
+            return AuthManager._instance;
+        }
+        AuthManager._instance = this;
     
+        this.currentUser = null;
+        this.authToken = null;
+        this._loadStateFromLocalStorageOnInit();
     }
-    
-    _loadStateFromLocalStorage() {
-    const token = localStorage.getItem('authToken');
-    const userStr = localStorage.getItem('currentUserGameHub');
-    if (token && userStr) {
-    try {
-    this.authToken = token;
-    this.currentUser = JSON.parse(userStr);
-    console.log("AuthManager: Estado cargado desde localStorage", this.currentUser);
-    } catch (e) {
-    console.error("AuthManager: Error parseando currentUserGameHub desde localStorage", e);
-    this._clearAuthData(); // Limpiar si está corrupto
+  
+    _loadStateFromLocalStorageOnInit() {
+      const token = localStorage.getItem('authToken');
+      const userStr = localStorage.getItem('currentUserGameHub');
+  
+      if (token && userStr) {
+        try {
+          this.authToken = token;
+          this.currentUser = JSON.parse(userStr);
+          console.log(
+            "AuthManager Initialized: State loaded from localStorage for user:",
+            this.currentUser.username
+          );
+        } catch (e) {
+          console.error(
+            "AuthManager Initialized: Error parsing currentUserGameHub from localStorage. Clearing auth data.",
+            e
+          );
+          this._clearAuthDataInternal(); // Limpiar si los datos están corruptos
+        }
+      } else {
+        this._clearAuthDataInternal(); // Asegurar estado limpio si no hay token o usuario
+      }
+  
+      // NO notificamos aquí directamente. La notificación inicial puede venir de
+      // un script global o cuando los observadores se registran y piden el estado.
+      // O, podríamos tener un método 'initializeUI' que los observadores llaman.
+      // Por ahora, dejaremos que los observadores pidan el estado al registrarse.
     }
-    } else {
-    this._clearAuthData(); // Asegurar estado limpio si no hay token o usuario
+  
+    // Este método puede ser llamado por los observadores después de registrarse
+    // o por un script principal después de que todos los observadores estén listos.
+    notifyInitialState() {
+      console.log("AuthManager: Notifying initial state to observers.");
+      this.notifyObservers(this.getAuthState());
     }
-    // Notificar a los observadores del estado inicial (incluso si es null)
-    // Esto es importante para que la UI se renderice correctamente al cargar la página
-    this.notifyObservers(this.getAuthState());
-    }
-    
+  
     login(userData, token) {
-    console.log("AuthManager: User logged in", userData);
-    this.currentUser = userData;
-    this.authToken = token;
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('currentUserGameHub', JSON.stringify(userData));
-    this.notifyObservers(this.getAuthState());
+      if (!userData || !token) {
+        console.error("AuthManager: Login attempt with invalid data.");
+        return;
+      }
+  
+      console.log("AuthManager: User logged in -", userData.username);
+      this.currentUser = userData;
+      this.authToken = token;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('currentUserGameHub', JSON.stringify(userData));
+      this.notifyObservers(this.getAuthState());
     }
-    
+  
     logout() {
-    console.log("AuthManager: User logged out");
-    this._clearAuthData();
-    this.notifyObservers(this.getAuthState());
+      const username = this.currentUser ? this.currentUser.username : 'User';
+      console.log(`AuthManager: ${username} logged out.`);
+      this._clearAuthDataInternal();
+      // Notificar a los observadores que el estado ha cambiado a "no logueado"
+      this.notifyObservers(this.getAuthState());
     }
-    
-    _clearAuthData() {
-    this.currentUser = null;
-    this.authToken = null;
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUserGameHub');
+  
+    // Método interno para limpiar datos sin notificar (la notificación la hace logout)
+    _clearAuthDataInternal() {
+      this.currentUser = null;
+      this.authToken = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUserGameHub');
     }
-    
+  
     getAuthState() {
-    return {
-    isLoggedIn: !!this.authToken,
-    currentUser: this.currentUser,
-    authToken: this.authToken
-    };
+      return {
+        isLoggedIn: !!this.authToken && !!this.currentUser,
+        currentUser: this.currentUser,
+        authToken: this.authToken, // Aunque los observadores raramente necesitarán el token en sí
+      };
     }
-    
+  
     getToken() {
-    return this.authToken;
+      return this.authToken;
     }
-    
+  
     getCurrentUser() {
-    return this.currentUser;
+      return this.currentUser;
     }
-    
+  
     isUserLoggedIn() {
-    return !!this.authToken && !!this.currentUser;
+      return !!this.authToken && !!this.currentUser;
     }
-    
-    
-    }
-    
-    // Instancia Singleton
-    const authManager = new AuthManager();
-    // Si usas módulos ES6: export default authManager;
-    // Para scripts globales, 'authManager' estará disponible.
+  }
+  
+  // Instancia Singleton global.
+  // Este script se carga una vez, creando la única instancia de AuthManager.
+  const authManager = new AuthManager();
+  

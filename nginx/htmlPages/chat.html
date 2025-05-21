@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Chat & Friends - GameHub Local</title>
-    <script src="js/authGuard.js"></script>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
+    
     <script src="js/navigation.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -106,32 +111,31 @@
         </section>
     </main>
 
-    <script src="js/page_managers/ChatPageManager.js"></script> <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // o 'chat.html'
+    <script src="js/page_managers/ChatPageManager.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = 'chat.html';
             
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             } else {
-                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded before this script.");
+                console.error("renderNavigationBar function not found from navigation.js");
             }
 
-            // authGuard.js (incluido en <head>) debería haber manejado la redirección si no hay token.
-            // Esta página definitivamente requiere que el usuario esté logueado.
-            const authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                // Esto es un fallback por si authGuard falla o no está implementado como se espera
-                console.warn("ChatPage: No auth token found, redirecting to login (fallback).");
-                window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
-                return; // Detener la ejecución del script si se va a redirigir
-            }
+            // authGuard.js debe estar en <head> para esta página.
+            // El constructor de ChatPageManager y _initialize ya verifican auth.
 
-            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined' && typeof io !== 'undefined') {
-                new ChatPageManager(apiService, io); // Instanciar el manejador, pasando apiService y la func 'io' de Socket.IO
+            let chatPageManagerInstance;
+            if (typeof ChatPageManager !== 'undefined' && typeof apiService !== 'undefined' && typeof io !== 'undefined') {
+                chatPageManagerInstance = new ChatPageManager(apiService, io);
+                // Si ChatPageManager es un Observer:
+                // authManager.addObserver(chatPageManagerInstance); // En su constructor
             } else {
-                console.error("ApiService or Socket.IO (io) is not available. Cannot initialize ChatPageManager.");
-                const mainContent = document.querySelector('main');
-                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading chat components. Please try again later.</p>';
+                console.error("ApiService, Socket.IO (io), or ChatPageManager is not available.");
+            }
+            
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
             }
         });
     </script>

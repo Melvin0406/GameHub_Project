@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Streams - GameHub Local</title>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    <script src="js/auth/authGuard.js"></script>
+    
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
+    
     <script src="js/navigation.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
@@ -117,19 +124,24 @@
         }
         
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = 'live_streams.html'; 
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
+            // 1. Inicializar la navegación (registra el observador de la navegación)
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             } else {
-                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded.");
+                console.error("initializeNavigation function not found. Ensure navigation.js is loaded.");
             }
             
-            // If this page requires login, authGuard.js (included in <head>) should handle redirection.
-            // If authGuard.js is not used, you might check for token before loading streams:
-            // if (!localStorage.getItem('authToken') && !publicPages.includes(currentPage) ) {
-            //     window.location.href = 'login.html'; return;
-            // }
-            
+            // 2. (Opcional) Instanciar PageManager si esta página tuviera uno.
+            // Por ahora, la lógica está aquí.
+
+            // 3. Notificar el estado inicial de autenticación a todos los observadores
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
+            } else {
+                console.error("AuthManager or notifyInitialState not found.");
+            }
+
+            // 4. Cargar el contenido específico de la página
             loadLiveStreams();
         });
     </script>

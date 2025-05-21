@@ -4,8 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to GameHub Local!</title>
+    <script src="js/patterns/Subject.js"></script>
+    <script src="js/patterns/Observer.js"></script>
+
+    <script src="js/auth/AuthManager.js"></script>
+    
     <script src="js/BaseApiService.js"></script>
     <script src="js/ApiService.js"></script>
+    
     <script src="js/navigation.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
@@ -94,25 +100,31 @@
         <p>&copy; 2025 GameHub Local. Created by Kevin.</p>
     </footer>
 
-    <script src="js/page_managers/HomePageManager.js"></script> <script>
+    <script src="js/page_managers/HomePageManager.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const currentPage = 'index.html';
             
-            if (typeof renderNavigationBar === 'function') {
-                renderNavigationBar(currentPage);
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation(); // Registra el observador de la navegación
             } else {
-                console.error("renderNavigationBar function not found. Ensure navigation.js is loaded before HomePageManager.js.");
+                console.error("initializeNavigation function not found.");
             }
 
-            // authGuard.js no es estrictamente necesario para la página de inicio si es pública,
-            // pero si lo tienes, asegúrate de que esté en el <head>.
-
-            if (typeof ApiService !== 'undefined' && typeof apiService !== 'undefined') {
-                new HomePageManager(apiService); // Instanciar el manejador de la página de inicio
+            let homePageManagerInstance;
+            if (typeof HomePageManager !== 'undefined' && typeof apiService !== 'undefined') {
+                homePageManagerInstance = new HomePageManager(apiService);
+                // Si HomePageManager necesita reaccionar a cambios de auth y es un Observer:
+                // if (typeof authManager !== 'undefined' && homePageManagerInstance instanceof Observer) {
+                //     authManager.addObserver(homePageManagerInstance);
+                // }
             } else {
-                console.error("ApiService is not available. Cannot initialize HomePageManager.");
-                const mainContent = document.querySelector('main');
-                if(mainContent) mainContent.innerHTML = '<p class="status-error" style="text-align:center;">A critical error occurred loading page components. Please try again later.</p>';
+                console.error("Cannot initialize HomePageManager.");
+            }
+
+            // Notificar el estado inicial a todos los observadores
+            if (typeof authManager !== 'undefined' && typeof authManager.notifyInitialState === 'function') {
+                authManager.notifyInitialState();
             }
         });
     </script>
