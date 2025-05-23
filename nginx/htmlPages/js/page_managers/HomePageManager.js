@@ -9,32 +9,15 @@ class HomePageManager {
         this.featuredGamesGrid = document.getElementById('featured-games-grid');
         this.recentModsGrid = document.getElementById('recent-mods-grid');
         this.viewStreamsLink = document.getElementById('view-streams-link');
-        
-        // Podrías necesitar datos del usuario actual si la página de inicio se personaliza
-        // this.currentUserData = null; 
 
         this._initialize();
     }
 
     async _initialize() {
-        // await this._fetchCurrentUserData(); // Si necesitas datos del usuario para la home page
         this.loadFeaturedGames();
         this.loadRecentMods();
-        this._setupStreamLink(); // Renombrado para claridad y convención de método privado
+        this._setupStreamLink();
     }
-
-    // Si en el futuro la home page necesitara datos del usuario logueado:
-    // async _fetchCurrentUserData() {
-    //     const authToken = localStorage.getItem('authToken');
-    //     if (authToken) {
-    //         try {
-    //             this.currentUserData = await this.apiService.getMyProfile();
-    //         } catch (error) {
-    //             console.warn("Could not fetch current user data for home page:", error.message);
-    //             this.currentUserData = null;
-    //         }
-    //     }
-    // }
 
     _createGameCard(game) {
         const card = document.createElement('a');
@@ -114,11 +97,5 @@ class HomePageManager {
         }
         // El enlace de "View Streams" en la home page apunta a la lista de streams en el dominio principal
         this.viewStreamsLink.href = `http://${currentHostname}/live_streams.html`;
-        // Si quisieras que el botón "View Live Streams" en la home page apunte directamente
-        // al stream por defecto del dominio de stream, sería:
-        // this.viewStreamsLink.href = `http://${streamDomain}/`;
-        // Pero como ahora "View Streams" es una lista, lo mantenemos apuntando a live_streams.html
-        // La lógica de `navigation.js` ya maneja el enlace "View Streams" de la barra de nav principal.
-        // Este botón es específico de la home page.
     }
 }
