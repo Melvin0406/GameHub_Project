@@ -57,6 +57,7 @@ class NavigationUIObserver extends Observer {
             let streamPageLinkWithToken = `http://${streamViewingDomain}/`;
             if (authState.authToken && currentHostname.startsWith('servidor-juego')) {
                 streamPageLinkWithToken += `?authToken=${encodeURIComponent(authState.authToken)}`;
+                console.log("navigation.js: Stream page link with token: " + streamPageLinkWithToken);
             }
 
             navHtml += `
