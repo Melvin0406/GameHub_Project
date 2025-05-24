@@ -8,6 +8,7 @@ class HomePageManager {
         // Cache de elementos del DOM
         this.featuredGamesGrid = document.getElementById('featured-games-grid');
         this.recentModsGrid = document.getElementById('recent-mods-grid');
+        this.liveStreamsGrid = document.getElementById('live-streams-grid');
         this.viewStreamsLink = document.getElementById('view-streams-link');
 
         this._initialize();
@@ -16,6 +17,7 @@ class HomePageManager {
     async _initialize() {
         this.loadFeaturedGames();
         this.loadRecentMods();
+        this.loadLiveStreams();
         this._setupStreamLink();
     }
 
@@ -87,6 +89,114 @@ class HomePageManager {
             this.recentModsGrid.innerHTML = '<p class="status-error">Could not load recent mods.</p>';
         }
     }
+
+    async loadLiveStreams() {
+        if (!this.liveStreamsGrid) {
+            console.error("HomePageManager: Elemento 'live-streams-grid' no encontrado en el DOM.");
+            return;
+        }
+    
+        this.liveStreamsGrid.innerHTML = '<p class="loading-message">Loading live streams...</p>';
+        console.log("HomePageManager: Attempting to load live streams...");
+    
+        try {
+            const streams = await this.apiService.getLiveStreams(); // Llama al endpoint GET /api/streams/live
+            console.log("HomePageManager: Received live streams data from API:", streams);
+    
+            this.liveStreamsGrid.innerHTML = ''; // Limpiar mensaje de "cargando"
+    
+            if (streams && Array.isArray(streams) && streams.length > 0) {
+                streams.forEach(stream => {
+                    try {
+                        // Asegúrate que _createStreamCardForHome esté definido y funcione
+                        const streamCard = this._createStreamCardForHome(stream); 
+                        this.liveStreamsGrid.appendChild(streamCard);
+                    } catch (cardError) {
+                        console.error("HomePageManager: Error creating or appending stream card for stream:", stream, cardError);
+                    }
+                });
+            } else if (streams && streams.length === 0) {
+                console.log("HomePageManager: No live streams are currently active.");
+                this.liveStreamsGrid.innerHTML = `
+                    <p class="placeholder-text">
+                        No one is streaming live right now. Be the first!
+                    </p>
+                `;
+            } else {
+                console.warn("HomePageManager: Received unexpected data for live streams or no streams available.", streams);
+                this.liveStreamsGrid.innerHTML = `
+                    <p class="placeholder-text">
+                        Could not determine live stream status or no streams available.
+                    </p>
+                `;
+            }
+        } catch (error) {
+            console.error("HomePageManager: Error in loadLiveStreams API call:", error);
+            this.liveStreamsGrid.innerHTML = `
+                <p class="status-error">
+                    Could not load live streams: ${error.message || 'Unknown server error'}
+                </p>
+            `;
+        }
+    }
+
+    _setupStreamLink() {
+        // Este es para el botón grande en la sección de streams, no para la nav bar.
+        if (!this.viewStreamsLink) return;
+    
+        // Este botón siempre debe llevar a la página que lista TODOS los streams: live_streams.html
+        const currentHostname = window.location.hostname;
+        let mainAppDomain = 'servidor-juego.casa.local';
+    
+        if (currentHostname.includes('cetys.local')) {
+            mainAppDomain = 'servidor-juego.cetys.local';
+        }
+    
+        this.viewStreamsLink.href = `http://${mainAppDomain}/live_streams.html`;
+    }
+    
+    
+
+    _createStreamCardForHome(stream) {
+        // Renombrada para evitar confusión si tienes otra
+        const currentHostnameForLink = window.location.hostname;
+        let streamViewingDomain = 'servidor-stream.casa.local';
+    
+        if (currentHostnameForLink.includes('cetys.local')) {
+            streamViewingDomain = 'servidor-stream.cetys.local';
+        }
+    
+        let viewUrl = `http://${streamViewingDomain}/index.html?key=${encodeURIComponent(stream.stream_key)}`;
+        const authTokenForLink = authManager.getToken(); // Obtener token de AuthManager
+    
+        if (authTokenForLink) {
+            viewUrl += `&authToken=${encodeURIComponent(authTokenForLink)}`;
+        }
+    
+        const card = document.createElement('a');
+        card.href = viewUrl;
+        card.className = 'item-card stream-card';
+        card.target = '_blank';
+    
+        card.innerHTML = `
+            <img 
+                src="${stream.profile_image_url || 'images/default_avatar.png'}" 
+                alt="${stream.username}'s stream cover" 
+                class="card-cover"
+            >
+            <div class="item-card-content">
+                <h3>${stream.title || `${stream.username}'s Stream`}</h3>
+                <p class="streamer-info">Streamer: ${stream.username}</p>
+                <p class="game-info">Game: ${stream.game_name || 'Not specified'}</p>
+                <span class="live-indicator" style="color:red; font-weight:bold; display:block; margin-top:0.5rem;">
+                    🔴 LIVE
+                </span>
+            </div>
+        `;
+    
+        return card;
+    }
+    
     
     _setupStreamLink() {
         if (!this.viewStreamsLink) return;

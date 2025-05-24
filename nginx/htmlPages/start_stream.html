@@ -115,7 +115,7 @@
                 <li>For the <strong>Service</strong> dropdown, choose "Custom...".</li>
                 <li>
                     In the <strong>Server</strong> field, paste the "RTMP Server URL" exactly as shown above.
-                    <br><em>(It should look like: <code>rtmp://servidor-stream.casa.local/hls</code> or similar)</em>
+                    <br><em>(It should look like: <code>rtmp://servidor-stream.cetys.local/hls</code> or similar)</em>
                 </li>
                 <li>
                     In the <strong>Stream Key</strong> field, paste your unique "Stream Key" shown above.
@@ -245,7 +245,7 @@
                     streamKeyDisplay.textContent = data.stream_key;
 
                     const currentHostname = window.location.hostname;
-                    let streamDomainForViewLink = 'servidor-stream.casa.local'; // Default
+                    let streamDomainForViewLink = 'servidor-stream.cetys.local'; // Default
                     if (currentHostname.includes('cetys.local')) {
                         streamDomainForViewLink = 'servidor-stream.cetys.local';
                     }

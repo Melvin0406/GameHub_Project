@@ -206,13 +206,10 @@
             try {
                 const data = await apiService.signup(username, email, password);
 
-                if (response.ok) {
-                    messageArea.textContent = (data.message || "Registration successful!") + " Redirecting to login..."; // English
+                if (messageArea) {
+                    messageArea.textContent = (data.message || "Registration successful!") + " Redirecting to login...";
                     messageArea.classList.add('success');
                     messageArea.style.display = 'block';
-                    setTimeout(() => {
-                        window.location.href = 'login.html'; 
-                    }, 2500); 
                 } else {
                     alert((data.message || "Registration successful!") + " Redirecting to login...");
                 }
