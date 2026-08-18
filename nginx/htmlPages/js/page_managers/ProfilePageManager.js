@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\page_managers\ProfilePageManager.js
+// nginx/htmlPages/js/page_managers/ProfilePageManager.js
 
 class ProfilePageManager {
     constructor(apiServiceInstance) {

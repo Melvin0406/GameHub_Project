@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\authGuard.js
+// nginx/htmlPages/js/authGuard.js
 (function() {
     const authToken = localStorage.getItem('authToken');
     const currentPage = window.location.pathname.split('/').pop().toLowerCase();

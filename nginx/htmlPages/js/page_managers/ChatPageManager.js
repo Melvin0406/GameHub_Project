@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\page_managers\ChatPageManager.js
+// nginx/htmlPages/js/page_managers/ChatPageManager.js
 
 class ChatPageManager {
     constructor(apiServiceInstance, ioInstance) {

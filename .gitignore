@@ -32,3 +32,14 @@ Thumbs.db
 ftp_storage/
 backend/uploads/
 backend/public/
+
+# Nginx portátil: el binario y los assets vendor NO se versionan.
+# Descarga un build de nginx-rtmp y colócalo en nginx/ (ver README).
+nginx/nginx.exe
+nginx/*.dll
+nginx/html/*.swf
+nginx/html/swfobject.js
+nginx/html/stat.xsl
+nginx/html/crossdomain.xml
+nginx/html/50x.html
+nginx/html/vod.html

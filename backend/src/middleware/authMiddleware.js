@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\backend\src\middleware\authMiddleware.js
+// backend/src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 

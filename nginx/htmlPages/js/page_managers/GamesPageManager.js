@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\page_managers\GamesPageManager.js
+// nginx/htmlPages/js/page_managers/GamesPageManager.js
 
 class GamesPageManager {
     constructor(apiServiceInstance) {

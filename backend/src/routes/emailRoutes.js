@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\backend\src\routes\emailRoutes.js
+// backend/src/routes/emailRoutes.js
 const express = require('express');
 const router = express.Router();
 const emailController = require('../controllers/emailController');

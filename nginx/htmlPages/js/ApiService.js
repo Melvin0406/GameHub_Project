@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\nginx\htmlPages\js\ApiService.js
+// nginx/htmlPages/js/ApiService.js
 class ApiService extends BaseApiService {
     constructor(baseUrl = '/api') {
         super(baseUrl); // Llama al constructor de la clase BaseApiService

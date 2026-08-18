@@ -1,164 +1,209 @@
-# GameHub Local - Plataforma de Streaming y Red Social de Videojuegos (Proyecto Local)
+# GameHub Local
 
-Bienvenido a GameHub Local, una plataforma local para streaming de videojuegos, intercambio de archivos (mods), y funcionalidades de red social. Este proyecto está diseñado para correr en un entorno de desarrollo local.
+Plataforma tipo Twitch autoalojada: streaming en vivo (RTMP → HLS), red social y distribución de mods, corriendo íntegramente sobre infraestructura de red local.
 
-## Tabla de Contenidos
-1. [Descripción General](#descripción-general)
-2. [Funcionalidades](#funcionalidades)
-3. [Stack Tecnológico](#stack-tecnológico)
-4. [Prerrequisitos de Software](#prerrequisitos-de-software)
-5. [Configuración del Entorno de Desarrollo](#configuración-del-entorno-de-desarrollo)
-    * [Clonar el Repositorio](#clonar-el-repositorio)
-    * [Configurar DNS Local](#configurar-dns-local)
-    * [Configurar el Backend](#configurar-el-backend)
-    * [Configurar Nginx Portátil](#configurar-nginx-portátil)
-6. [Iniciar los Servicios](#iniciar-los-servicios)
-7. [Acceder a la Aplicación](#acceder-a-la-aplicación)
-8. [(Opcional) Configurar OBS para Streaming](#opcional-configurar-obs-para-streaming)
+Proyecto final de la materia de Redes y Servidores (CETYS Universidad, 2025). El objetivo era levantar y conectar todos los servicios de una plataforma real — DNS, proxy inverso, servidor de streaming, API y base de datos — sin depender de servicios en la nube.
 
 ---
 
-## Descripción General
-Este proyecto simula una plataforma tipo Twitch/red social enfocada en videojuegos, operando completamente en una red local. Permite a los usuarios registrarse, iniciar sesión, ver streams en vivo, (eventualmente) subir mods, y más.
+## Stack
+
+| Capa | Tecnología |
+|---|---|
+| API | Node.js · Express 5 |
+| Tiempo real | Socket.IO (chat 1-a-1 con autenticación por JWT) |
+| Base de datos | SQLite 3 |
+| Autenticación | JWT + bcryptjs |
+| Frontend | JavaScript vanilla (ES6), sin framework |
+| Proxy inverso / web | Nginx |
+| Streaming | Nginx-RTMP → HLS · hls.js en el cliente |
+| DNS local | Acrylic DNS Proxy |
+| Otros | Multer (subida de archivos), Nodemailer |
+
+---
+
+## Arquitectura
+
+El backend está organizado en cuatro capas con responsabilidades separadas. Cada petición atraviesa:
+
+```
+Cliente → Nginx (proxy inverso)
+            ↓
+        routes/       ← define endpoints y aplica middleware
+            ↓
+        middleware/   ← verifica el JWT y adjunta req.user
+            ↓
+        controllers/  ← traduce HTTP ↔ dominio (params, status codes)
+            ↓
+        services/     ← reglas de negocio, validaciones, errores tipados
+            ↓
+        repositories/ ← único punto que toca SQL
+            ↓
+         SQLite
+```
+
+Los `services` lanzan errores con `statusCode` propio, de modo que los `controllers` no necesitan conocer las reglas de negocio para responder correctamente. Los `repositories` son el único lugar del código con SQL: ninguna capa superior sabe que la base es SQLite.
+
+```
+backend/
+├── server.js                  # Composición: Express, Socket.IO, montaje de rutas
+└── src/
+    ├── config/
+    │   ├── database.js        # Conexión y creación de tablas
+    │   └── mailer.js
+    ├── routes/                # 8 routers montados bajo /api
+    ├── middleware/
+    │   └── authMiddleware.js  # Verificación de JWT
+    ├── controllers/           # 8 controllers
+    ├── services/              # Lógica de negocio
+    └── repositories/          # Acceso a datos
+```
+
+El frontend sigue la misma idea de separación, sin framework:
+
+```
+nginx/htmlPages/js/
+├── BaseApiService.js   # Cliente HTTP base (headers, manejo de errores)
+├── ApiService.js       # Endpoints concretos, extiende BaseApiService
+├── auth/AuthManager.js # Sesión y token en el cliente
+├── authGuard.js        # Protección de páginas privadas
+├── patterns/           # Subject / Observer para propagar cambios de estado
+└── page_managers/      # Un controlador por página (Home, Games, Chat, Profile)
+```
+
+### Decisiones que vale la pena señalar
+
+- **Nginx como único punto de entrada:** el frontend se sirve estático y `/api/` y `/socket.io/` se pasan por proxy al backend en el puerto 3000. El navegador nunca habla directo con Node.
+- **Socket.IO autenticado:** el handshake valida el JWT en un middleware antes de aceptar la conexión; no basta con abrir el socket.
+- **El `password_hash` nunca sale de la capa de servicio** — se filtra explícitamente antes de construir la respuesta.
+- **Streaming desacoplado:** OBS publica por RTMP al puerto 1935; Nginx fragmenta a HLS y lo sirve por HTTP. El backend solo administra metadatos del stream (título, juego, clave), no toca el video.
+
+---
 
 ## Funcionalidades
-* **Servidor DNS Local:** Usando Acrylic DNS Proxy (o archivo hosts) para nombres de dominio locales.
-* **Servidor Web y Proxy Inverso:** Nginx para servir el frontend y como proxy para el backend.
-* **Servidor de Streaming:** Nginx con el módulo RTMP para streaming en vivo y HLS para visualización.
-* **Backend de Aplicación:** Node.js con Express para la lógica de negocio, autenticación y APIs.
-* **Autenticación:** Registro e inicio de sesión de usuarios con JWT.
-* **(En desarrollo)** Servidor de Correo, Servidor FTP, mensajería, etc.
 
-## Stack Tecnológico
-* **Frontend:** HTML, CSS, JavaScript
-* **Backend:** Node.js, Express.js
-* **Base de Datos:** SQLite
-* **Servidor Web/Proxy/Streaming:** Nginx (versión portátil para Windows incluida en el repo)
-* **DNS Local:** Acrylic DNS Proxy.
+- Registro e inicio de sesión con JWT
+- Perfiles de usuario con foto (subida vía Multer)
+- Sistema de amistades (solicitud / aceptación)
+- Chat privado en tiempo real vía Socket.IO
+- Mensajería interna tipo correo
+- Catálogo de juegos y subida de mods
+- Transmisión en vivo y visualización HLS
 
 ---
 
-## Prerrequisitos de Software
-Antes de comenzar, asegúrate de tener instalado lo siguiente en tu máquina Windows:
+## Requisitos
 
-* **Git:** Para clonar y gestionar el control de versiones. [Descargar Git](https://git-scm.com/downloads)
-* **Node.js:** Versión LTS (Long Term Support) recomendada. Esto también instala `npm`. [Descargar Node.js](https://nodejs.org/)
-* **(Opcional pero recomendado)** Un editor de código como [VS Code](https://code.visualstudio.com/).
-* **(Opcional)** Herramienta para probar APIs como [Postman](https://www.postman.com/downloads/).
-* **(Para streaming)** [OBS Studio](https://obsproject.com/download)
+- [Node.js](https://nodejs.org/) LTS
+- [Nginx con el módulo RTMP](https://github.com/illuknight/nginx-rtmp-win32) (build para Windows)
+- [Acrylic DNS Proxy](http://mayakron.altervista.org/wikibase/show.php?id=AcrylicHome) (o edición manual del archivo `hosts`)
+- [OBS Studio](https://obsproject.com/download) — solo para probar streaming
 
 ---
 
-## Configuración del Entorno de Desarrollo
+## Instalación
 
-Sigue estos pasos para configurar el proyecto en tu máquina local:
+### 1. Clonar el repositorio
 
-### 1. Clonar el Repositorio
-Si tienes GitHub Desktop descargado, en esta página del repositorio, ve al botón verde de Code y abre o clona el repositorio con GitHub Desktop.
-
-Si prefieres hacerlo manual, abre una terminal (Git Bash, CMD o PowerShell), dirígete al folder donde quieres tener el repositorio y clona el repositorio:
 ```bash
-cd C:Usuario\Documents\Github (Por ejemplo)
-git clone [URL_DEL_REPOSITORIO_GIT_AQUI] GameHub_Project
+git clone https://github.com/Melvin0406/GameHub_Project.git
 cd GameHub_Project
 ```
-(Reemplaza `[URL_DEL_REPOSITORIO_GIT_AQUI]` con la URL real del repositorio en GitHub en el botón verde de code).
 
-### 2. Configurar DNS Local
-Para acceder a la plataforma usando los nombres de dominio `servidor-juego.casa.local` y `servidor-stream.casa.local`, necesitas configurar tu DNS local.
+### 2. Configurar DNS local
 
-**Acrylic DNS Proxy**
-1.  Descarga e instala Acrylic DNS Proxy desde [su sitio oficial](http://mayakron.altervista.org/wikibase/show.php?id=AcrylicHome).
-2.  Edita el archivo de hosts de Acrylic abriendolo como administrador en notepad (ej. `C:\Program Files (x86)\Acrylic DNS Proxy\AcrylicHosts.txt`).
-3.  Añade las siguientes líneas al final del archivo:
-    ```
-    [LA_IP_DE_TU_LAPTOP] servidor-juego.casa.local
-    [LA_IP_DE_TU_LAPTOP] servidor-stream.casa.local
-    ```
-4.  Edita el archivo AcrylicConfiguration.ini abriéndolo como administrador en notepad (ej. `C:\Program Files (x86)\Acrylic DNS Proxy\AcrylicConfiguration.ini`).
-5.  Añade la siguiente línea al final del archivo en la parte de [AllowedAddressesSection]:
-    ```
-    IP1=*
-    ```
-5.  Guarda ambos archivos y reinicia el servicio "Acrylic DNS Proxy Service" abriendo el cmd y escribiendo los siguientes comandos:
+Para acceder mediante los dominios `servidor-juego.casa.local` y `servidor-stream.casa.local`:
+
+1. Instala Acrylic DNS Proxy.
+2. Abre `C:\Program Files (x86)\Acrylic DNS Proxy\AcrylicHosts.txt` como administrador y añade:
+   ```
+   [IP_DE_TU_MAQUINA] servidor-juego.casa.local
+   [IP_DE_TU_MAQUINA] servidor-stream.casa.local
+   ```
+3. En `AcrylicConfiguration.ini`, dentro de `[AllowedAddressesSection]`, añade:
+   ```
+   IP1=*
+   ```
+4. Reinicia el servicio:
+   ```bash
+   net stop AcrylicDNSProxySvc
+   net start AcrylicDNSProxySvc
+   ```
+5. Configura tu adaptador de red (IPv4) para usar `127.0.0.1` como DNS preferido.
+
+> Alternativa rápida sin Acrylic: añade esas dos líneas a `C:\Windows\System32\drivers\etc\hosts`.
+
+### 3. Configurar el backend
+
 ```bash
-net stop AcrylicDNSProxySvc
-net start AcrylicDNSProxySvc
+cd backend
+cp .env.example .env
+npm install
 ```
-6.  Configura las propiedades de tu adaptador de red (IPv4) para usar `127.0.0.1` como el "Servidor DNS preferido".
 
-### 3. Configurar el Backend
-El backend maneja la lógica de la aplicación y la autenticación.
+Edita `.env` y reemplaza `JWT_SECRET` por una cadena larga y aleatoria. La base de datos SQLite se crea sola en el primer arranque.
 
-1.  Navega a la carpeta del backend en tu terminal:
-    ```bash
-    cd backend
-    ```
-    (Si estás en la raíz del proyecto `GameHub_Project`, entonces `cd backend`).
+### 4. Instalar Nginx
 
-2.  **Crear archivo de entorno `.env`:**
-    Copia el archivo `backend/.env.example` a un nuevo archivo llamado `backend/.env`.
-    **¡Importante!** Cambia `JWT_SECRET` por una cadena única, larga y segura.
+Este repositorio **no incluye el binario de Nginx**, solo la configuración. Descarga un build de Nginx con el módulo RTMP y colócalo así:
 
-3.  **Instalar dependencias del backend:**
-    ```bash
-    npm install
-    ```
+```
+nginx/
+├── nginx.exe          ← el binario que descargaste
+├── conf/nginx.conf    ← incluido en este repo
+├── htmlPages/         ← incluido en este repo (frontend)
+└── html/index.html    ← incluido en este repo (reproductor HLS)
+```
 
-### 4. Configurar Nginx Portátil
-NORMALMENTE NO DEBERÍAS DE NECESITAR MODIFICAR NADA EN ESTA SECCIÓN, pero la pongo por si hay algún problema en el futuro.
-Nginx se incluye de forma portátil dentro de la carpeta `nginx/` del proyecto.
+Copia el resto de archivos del build descargado (`logs/`, `temp/`, `conf/mime.types` si falta) junto al ejecutable.
 
-1.  **Verificar Puertos:** Asegúrate de que ningún otro servicio (como IIS, Skype, u otra instancia de Apache/Nginx) esté usando el **puerto 80**. Si es así, detén ese servicio temporalmente o modifica el archivo `nginx/conf/nginx.conf` para que escuche en un puerto diferente (ej. `listen 8080;`) y ajusta las URLs de acceso en el navegador.
-2.  La configuración de Nginx (`nginx/conf/nginx.conf`) ya está preparada con rutas relativas para funcionar desde la carpeta del proyecto. No deberías necesitar modificarla si la estructura del proyecto se mantiene como está en el repositorio.
+> Verifica que ningún otro servicio esté ocupando el **puerto 80**.
 
 ---
 
-## Iniciar los Servicios
-Debes iniciar tanto el backend como Nginx.
+## Ejecución
 
-1.  **Iniciar el Backend Node.js:**
-    * Abre una terminal en la carpeta `backend/` (ej. `C:\Users\[TuUsuario]\Documents\GitHub\GameHub_Project\backend\`).
-    * Ejecuta:
-        ```bash
-        npm start
-        ```
-    * Deberías ver un mensaje como: `Servidor backend corriendo en http://localhost:3000`. Mantén esta terminal abierta.
+**Terminal 1 — backend:**
+```bash
+cd backend
+npm start
+```
+Debe imprimir `Servidor backend corriendo en http://localhost:3000`.
 
-2.  **Iniciar Nginx:**
-    * Abre **OTRA** terminal.
-    * Navega a la carpeta `nginx/` dentro del proyecto (ej. `C:\Users\[TuUsuario]\Documents\GitHub\GameHub_Project\nginx\`).
-    * Ejecuta el script de inicio:
-        ```batch
-        start_nginx.bat
-        nginx
-        ```
-    * Esto debería iniciar Nginx. Puedes verificar los logs en `nginx/logs/error.log` si algo sale mal.
-    * Puedes cerrar esta terminal.
+**Terminal 2 — Nginx:**
+```bash
+cd nginx
+start_nginx.bat
+```
+
+Luego abre `http://servidor-juego.casa.local/` en el navegador. Si algo falla, revisa `nginx/logs/error.log`.
+
+Para detener Nginx: `stop_nginx.bat`.
 
 ---
 
-## Acceder a la Aplicación
-Una vez que ambos servicios estén corriendo:
+## (Opcional) Transmitir con OBS
 
-* Abre tu navegador web y ve a: `http://servidor-juego.casa.local/`
-* Para ver la página del reproductor de stream (si alguien está transmitiendo): `http://servidor-stream.casa.local/` (y la ruta HLS específica, ej. `http://servidor-stream.casa.local/hls/test.m3u8`).
+En OBS, `Configuración → Emisión`:
+
+| Campo | Valor |
+|---|---|
+| Servicio | Personalizado |
+| Servidor | `rtmp://servidor-stream.casa.local/hls` |
+| Clave de retransmisión | la `stream_key` de tu perfil |
+
+Al iniciar la transmisión se generan fragmentos `.ts` en `nginx/html/hls_stream_data/`. El reproductor está en `http://servidor-stream.casa.local/`.
+
+---
+
+## Estado del proyecto
+
+Funcionales: autenticación, perfiles, amistades, chat en tiempo real, mensajería interna, catálogo de juegos, mods y streaming.
+
+Quedaron fuera del alcance del curso: servidor FTP dedicado y servidor de correo saliente real (el módulo de correo funciona solo entre usuarios de la plataforma).
 
 ---
 
-## (Opcional) Configurar OBS para Streaming
-Si quieres probar la funcionalidad de streaming y transmitir desde tu PC:
+## Autoría
 
-1.  Descarga e instala [OBS Studio](https://obsproject.com/download).
-2.  Abre OBS Studio.
-3.  Ve a `Archivo` -> `Configuración` (o `Settings`).
-4.  Selecciona la pestaña `Emisión` (o `Stream`).
-5.  Configura lo siguiente:
-    * **Servicio:** `Personalizado...` (o `Custom...`)
-    * **Servidor:** `rtmp://servidor-stream.casa.local/hls`
-    * **Clave de retransmisión:** `test` (o cualquier clave que desees. Esta clave se usará en la URL HLS, ej. `http://servidor-stream.casa.local/hls_stream_data/test.m3u8`).
-6.  Configura tus fuentes de video/audio en OBS (ej. capturar pantalla o juego).
-7.  Haz clic en "Iniciar transmisión" en OBS.
-8.  Luego, visita `http://servidor-stream.casa.local/` (tu página que tiene el reproductor HLS) y asegúrate de que el reproductor apunte a la URL HLS correcta (puedes abrir la carpeta nginx\html\hls_stream_data y revisar que se estén generando los archivos .ts del stream ahí). Debería de verse el stream.
-
----
+Desarrollado por [Melvin0406](https://github.com/Melvin0406) (36 de 37 commits) como proyecto final de curso.

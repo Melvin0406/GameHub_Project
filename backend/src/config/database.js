@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\backend\src\config\database.js
+// backend/src/config/database.js
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });

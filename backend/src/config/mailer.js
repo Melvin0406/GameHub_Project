@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\backend\src\config\mailer.js
+// backend/src/config/mailer.js
 const nodemailer = require('nodemailer');
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 

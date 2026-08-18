@@ -1,4 +1,4 @@
-// C:\Users\kevin\Documents\GitHub\GameHub_Project\backend\src\controllers\emailController.js
+// backend/src/controllers/emailController.js
 const transporter = require('../config/mailer');
 // No necesitamos db aquí si el email del remitente viene del token JWT
 

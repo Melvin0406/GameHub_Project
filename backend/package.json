@@ -1,16 +1,23 @@
 {
-  "name": "backend",
+  "name": "gamehub-backend",
   "version": "1.0.0",
+  "description": "API REST y servidor de tiempo real de GameHub Local: autenticacion JWT, chat con Socket.IO y gestion de streams.",
   "main": "server.js",
+  "author": "Melvin0406",
+  "license": "MIT",
+  "keywords": [
+    "express",
+    "socket.io",
+    "jwt",
+    "sqlite",
+    "rtmp",
+    "hls"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
